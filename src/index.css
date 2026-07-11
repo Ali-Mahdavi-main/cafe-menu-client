@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #f8f5f2;
+  --color-surface: #ffffff;
+
+  --color-primary: #8b5e3c;
+  --color-primary-foreground: #ffffff;
+
+  --color-accent: #d4a373;
+
+  --color-border: #e8e2dc;
+
+  --color-text: #2d2a26;
+  --color-text-muted: #6b665f;
+
+  --radius-card: 16px;
+  --radius-control: 12px;
+}
+
+html {
+  direction: rtl;
+}
+
+body {
+  font-family: "Vazirmatn", sans-serif;
+  background: var(--color-background);
+  color: var(--color-text);
+}
