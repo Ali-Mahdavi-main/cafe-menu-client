@@ -1,11 +1,5 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-
-import { apiFetch } from "@/services/api";
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -13,73 +7,51 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchCurrentUser();
+  const refreshUser = useCallback(async () => {
+    try {
+      const data = await apiFetch('/auth/me'); // endpoint that returns current user
+      setUser(data);
+    } catch {
+      setUser(null);
+      localStorage.removeItem('token');
+    }
   }, []);
 
-  async function fetchCurrentUser() {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await apiFetch("/auth/me");
-
-      if (!response.ok) {
-        localStorage.removeItem("token");
-        setUser(null);
-        return;
-      }
-
-      const data = await response.json();
-
-      setUser(data);
-    } catch (error) {
-      console.error(error);
-      localStorage.removeItem("token");
-      setUser(null);
-    } finally {
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      refreshUser().finally(() => setLoading(false));
+    } else {
       setLoading(false);
     }
-  }
+  }, [refreshUser]);
 
-  async function refreshUser() {
-    try {
-      const response = await apiFetch("/auth/me");
+  const login = async (username, password) => {
+    const data = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+    localStorage.setItem('token', data.token);
+    await refreshUser();
+    return data;
+  };
 
-      if (!response.ok) return;
-
-      const data = await response.json();
-
-      setUser(data);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  function logout() {
-    localStorage.removeItem("token");
+  const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
-  }
+  };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        logout,
-        refreshUser,
-        isAuthenticated: !!user,
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};

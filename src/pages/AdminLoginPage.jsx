@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -15,10 +14,14 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(username, password);
-      navigate('/dashboard');
+      const data = await apiFetch('/admin/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      });
+      localStorage.setItem('adminToken', data.token);
+      navigate('/admin/cafes');
     } catch (err) {
-      setError(err.message || 'ورود ناموفق بود');
+      setError(err.message || 'ورود ناموفق');
     } finally {
       setLoading(false);
     }
@@ -27,14 +30,10 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          ورود به پنل کافه
-        </h1>
+        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">ورود ادمین</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              نام کاربری
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">نام کاربری</label>
             <input
               type="text"
               value={username}
@@ -44,9 +43,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              رمز عبور
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">رمز عبور</label>
             <input
               type="password"
               value={password}
@@ -56,9 +53,7 @@ export default function LoginPage() {
             />
           </div>
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 rounded-lg p-2">
-              {error}
-            </div>
+            <div className="text-sm text-red-600 bg-red-50 rounded-lg p-2">{error}</div>
           )}
           <button
             type="submit"

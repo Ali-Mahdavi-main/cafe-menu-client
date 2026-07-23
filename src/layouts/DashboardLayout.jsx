@@ -1,29 +1,37 @@
-import { Outlet } from "react-router-dom"
+import { useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import AppSidebar from '../components/AppSidebar';
+import Navbar from '../components/Navbar';
 
-import Navbar from "@/components/Navbar"
-import Sidebar from "@/components/sidebar/Sidebar"
+const pageTitles = {
+  '/dashboard': { title: 'داشبورد', description: 'خلاصه وضعیت کافه' },
+  '/categories': { title: 'دسته‌بندی‌ها', description: 'مدیریت دسته‌بندی منو' },
+  '/menu-items': { title: 'آیتم‌های منو', description: 'مدیریت آیتم‌ها' },
+  '/settings': { title: 'تنظیمات', description: 'اطلاعات کافه' },
+};
 
-function DashboardLayout() {
-    const [collapsed, setCollapsed] = useState(false);
+export default function DashboardLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+  const pageInfo = pageTitles[location.pathname] || { title: '...', description: '' };
+
   return (
-    <div className="flex h-screen bg-muted/30">
-
-      <Sidebar
-        collapsed={collapsed}
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      <AppSidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+      />
+      
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Navbar
+          title={pageInfo.title}
+          description={pageInfo.description}
+          onToggleSidebar={() => setSidebarOpen(true)}
         />
-
-      <main className="flex flex-1 flex-col overflow-hidden">
-
-        <Navbar />
-
-        <div className="flex-1 overflow-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           <Outlet />
-        </div>
-
-      </main>
-
+        </main>
+      </div>
     </div>
-  )
+  );
 }
-
-export default DashboardLayout
