@@ -1,7 +1,8 @@
 const isLocalhost = window.location.hostname === 'localhost';
 const API_HOST = isLocalhost ? 'localhost' : window.location.hostname;
-const API_BASE = `http://${API_HOST}:5229/api`;
-const IMAGE_BASE = `http://${API_HOST}:5229`;   // correct base for images
+const protocol = window.location.protocol;
+const API_BASE = `${protocol}//${API_HOST}:5229/api`;
+const IMAGE_BASE = `${protocol}//${API_HOST}:5229`;
 
 /**
  * Recursively fix image URLs:
