@@ -5,14 +5,17 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [eventsEnabled, setEventsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const refreshUser = useCallback(async () => {
     try {
-      const data = await apiFetch('/auth/me'); // endpoint that returns current user
+      const data = await apiFetch('/auth/me');
       setUser(data);
+      setEventsEnabled(data.eventsEnabled ?? true);
     } catch {
       setUser(null);
+      setEventsEnabled(true);
       localStorage.removeItem('token');
     }
   }, []);
@@ -39,10 +42,11 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    setEventsEnabled(true);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, eventsEnabled, setEventsEnabled, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

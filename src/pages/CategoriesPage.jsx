@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Sparkles, X } from 'lucide-react';
 
 export default function CategoriesPage() {
   const { user } = useAuth();
@@ -27,16 +27,13 @@ export default function CategoriesPage() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Add/Edit dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [formName, setFormName] = useState('');
 
-  // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState(null);
 
-  // Feedback message (since we haven't installed sonner yet, use state)
   const [feedback, setFeedback] = useState({ show: false, message: '', type: 'success' });
 
   const showFeedback = (message, type = 'success') => {
@@ -44,27 +41,25 @@ export default function CategoriesPage() {
     setTimeout(() => setFeedback({ show: false, message: '', type: 'success' }), 4000);
   };
 
-    const fetchCategories = async () => {
-        try {
-            const data = await apiFetch('/category');   // GET /api/category
-            setCategories(Array.isArray(data) ? data : []);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchCategories = async () => {
+    try {
+      const data = await apiFetch('/category');
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user?.cafeId) fetchCategories();
   }, [user?.cafeId]);
 
-  // Filter and search (client‑side)
   const filteredCategories = categories.filter((cat) =>
     cat.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- Add / Edit ---
   const openAddDialog = () => {
     setEditingCategory(null);
     setFormName('');
@@ -82,17 +77,14 @@ export default function CategoriesPage() {
       showFeedback('نام دسته‌بندی الزامی است', 'error');
       return;
     }
-
     try {
       if (editingCategory) {
-        // PUT – backend not yet implemented, will show error if fails
         await apiFetch(`/category/${editingCategory.id}`, {
           method: 'PUT',
           body: JSON.stringify({ name: formName.trim() }),
         });
         showFeedback('دسته‌بندی با موفقیت ویرایش شد');
       } else {
-        // POST – implemented
         await apiFetch('/category', {
           method: 'POST',
           body: JSON.stringify({ name: formName.trim() }),
@@ -106,7 +98,6 @@ export default function CategoriesPage() {
     }
   };
 
-  // --- Delete ---
   const openDeleteDialog = (category) => {
     setDeletingCategory(category);
     setDeleteDialogOpen(true);
@@ -121,14 +112,14 @@ export default function CategoriesPage() {
       setDeleteDialogOpen(false);
       fetchCategories();
     } catch (err) {
-      showFeedback(err.message || 'حذف با مشکل مواجه شد (ممکن است endpoint وجود نداشته باشد)', 'error');
+      showFeedback(err.message || 'حذف با مشکل مواجه شد', 'error');
     }
   };
 
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
       </div>
     );
   }
@@ -142,28 +133,44 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
       {/* Feedback toast */}
       {feedback.show && (
         <div
-          className={`fixed bottom-6 left-6 z-50 rounded-lg px-4 py-3 text-sm font-medium shadow-lg ${
-            feedback.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl px-5 py-3 text-sm font-medium shadow-2xl ${
+            feedback.type === 'error' ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
           }`}
         >
-          {feedback.message}
+          <span>{feedback.message}</span>
+          <button
+            onClick={() => setFeedback({ show: false })}
+            className="ml-auto rounded-full p-1 text-white/70 hover:bg-white/10 hover:text-white"
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">دسته‌بندی‌ها</h1>
-          <p className="text-sm text-gray-500">مدیریت دسته‌بندی‌های منو</p>
+      {/* Hero Section */}
+      <div className="rounded-[32px] bg-gradient-to-br from-fuchsia-700 via-violet-700 to-indigo-700 p-6 text-white shadow-[0_20px_50px_-20px_rgba(91,33,182,0.65)]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-violet-100">بخش دسته‌بندی‌ها</p>
+            <h1 className="mt-2 text-2xl font-bold">دسته‌بندی‌های منو</h1>
+            <p className="mt-2 max-w-2xl text-sm text-violet-100">
+              دسته‌بندی‌های خود را مدیریت کنید تا آیتم‌های منو به صورت سازمان‌یافته نمایش داده شوند.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white/10 p-4 backdrop-blur">
+            <Button
+              onClick={openAddDialog}
+              className="gap-2 bg-white/20 text-white hover:bg-white/30 border-0"
+            >
+              <Plus size={16} />
+              افزودن دسته‌بندی
+            </Button>
+          </div>
         </div>
-        <Button onClick={openAddDialog} className="gap-2">
-          <Plus size={16} />
-          افزودن دسته‌بندی
-        </Button>
       </div>
 
       {/* Search */}
@@ -177,12 +184,12 @@ export default function CategoriesPage() {
         />
       </div>
 
-      {/* Table */}
-      <div className="rounded-2xl bg-white shadow-sm border">
+      {/* Table Card */}
+      <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-50">
             <TableRow>
-              <TableHead className="text-right">نام دسته‌بندی</TableHead>
+              <TableHead className="text-right font-semibold">نام دسته‌بندی</TableHead>
               <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
@@ -195,7 +202,7 @@ export default function CategoriesPage() {
               </TableRow>
             ) : (
               filteredCategories.map((cat) => (
-                <TableRow key={cat.id}>
+                <TableRow key={cat.id} className="hover:bg-violet-50/50">
                   <TableCell className="font-medium">{cat.name}</TableCell>
                   <TableCell>
                     <div className="flex gap-1 justify-end">
@@ -204,6 +211,7 @@ export default function CategoriesPage() {
                         variant="ghost"
                         onClick={() => openEditDialog(cat)}
                         title="ویرایش"
+                        className="hover:bg-violet-100 hover:text-violet-600"
                       >
                         <Pencil size={16} />
                       </Button>
@@ -212,7 +220,7 @@ export default function CategoriesPage() {
                         variant="ghost"
                         onClick={() => openDeleteDialog(cat)}
                         title="حذف"
-                        className="text-red-500 hover:text-red-700"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 size={16} />
                       </Button>
@@ -227,7 +235,7 @@ export default function CategoriesPage() {
 
       {/* Add / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-[28px] border-slate-200 shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
           <DialogHeader>
             <DialogTitle>
               {editingCategory ? 'ویرایش دسته‌بندی' : 'افزودن دسته‌بندی جدید'}
@@ -245,7 +253,7 @@ export default function CategoriesPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               انصراف
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700">
               {editingCategory ? 'ذخیره تغییرات' : 'افزودن'}
             </Button>
           </DialogFooter>
@@ -254,9 +262,9 @@ export default function CategoriesPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-[28px] shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
           <DialogHeader>
-            <DialogTitle>حذف دسته‌بندی</DialogTitle>
+            <DialogTitle className="text-rose-600">حذف دسته‌بندی</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600 mt-2">
             آیا از حذف «{deletingCategory?.name}» اطمینان دارید؟ این عمل قابل بازگشت نیست.
@@ -265,7 +273,7 @@ export default function CategoriesPage() {
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               انصراف
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="destructive" onClick={handleDelete} className="bg-rose-600 hover:bg-rose-700">
               حذف
             </Button>
           </DialogFooter>

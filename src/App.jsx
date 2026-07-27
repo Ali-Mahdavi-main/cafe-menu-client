@@ -14,6 +14,10 @@ import AdminCreateCafePage from './pages/AdminCreateCafePage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminCafesListPage from './pages/AdminCafesListPage';
 import AdminEditCafePage from './pages/AdminEditCafePage';
+import SubscriptionPage from './pages/SubscriptionPage';
+import EventsPage from './pages/EventsPage';
+import QRLandingPage from './pages/QRLandingPage';
+import PublicEventsPage from './pages/PublicEventsPage';
 
 export default function App() {
   return (
@@ -37,6 +41,8 @@ export default function App() {
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="menu-items" element={<MenuItemsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="events" element={<EventsPage />} />
+            <Route path="subscription" element={<SubscriptionPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
 
@@ -67,8 +73,10 @@ export default function App() {
             }
           />
 
-          {/* Public menu */}
+          {/* Public-facing QR experience */}
+          <Route path="/qr/:cafeId/:accessKey" element={<QRLandingPage />} />
           <Route path="/menu/:cafeId/:accessKey" element={<PublicMenuPage />} />
+          <Route path="/events/:cafeId/:accessKey" element={<PublicEventsPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

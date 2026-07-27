@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { apiFetch } from '../services/api';
 import ImageUploader from '../components/ImageUploader';
 import ThemeEditor from '../components/ThemeEditor';
+import { Sparkles, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 export default function AdminCreateCafePage() {
   const [form, setForm] = useState({
@@ -13,6 +14,7 @@ export default function AdminCreateCafePage() {
     instagramUrl: '',
     phone: '',
     workingHours: '',
+    eventsEnabled: true,
   });
 
   // Theme state – merged with defaults inside ThemeEditor
@@ -33,7 +35,8 @@ export default function AdminCreateCafePage() {
     try {
       const payload = {
         ...form,
-        themeConfigJson: JSON.stringify(theme),  // theme is already the full object
+        eventsEnabled: form.eventsEnabled,
+        themeConfigJson: JSON.stringify(theme),
       };
 
       const data = await apiFetch('/admin/cafes', {
@@ -56,6 +59,7 @@ export default function AdminCreateCafePage() {
         instagramUrl: '',
         phone: '',
         workingHours: '',
+        eventsEnabled: true,
       });
       setTheme({});
     } catch (err) {
@@ -71,11 +75,15 @@ export default function AdminCreateCafePage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10" dir="rtl">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">ساخت کافه جدید</h1>
-        <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">
-          خروج
+    <div className="mx-auto max-w-5xl px-4 py-10" dir="rtl">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[32px] border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-800 p-6 text-white shadow-[0_20px_50px_-20px_rgba(15,23,42,0.65)]">
+        <div>
+          <div className="flex items-center gap-2 text-sm text-slate-300"><Sparkles size={16} /> ساخت کافه جدید</div>
+          <h1 className="mt-2 text-2xl font-bold">راه‌اندازی سریع و حرفه‌ای برای کافه</h1>
+          <p className="mt-2 max-w-2xl text-sm text-slate-300">در این بخش می‌توانید کافه را با منوی عمومی، تنظیمات ظاهر و دسترسی رویدادها ایجاد کنید.</p>
+        </div>
+        <button onClick={handleLogout} className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20">
+          <ArrowLeft size={16} /> خروج
         </button>
       </div>
 
@@ -90,7 +98,7 @@ export default function AdminCreateCafePage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
         {/* Basic fields same as before */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -115,6 +123,15 @@ export default function AdminCreateCafePage() {
           <input name="address" value={form.address} onChange={handleChange} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
         </div>
 
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+            <input type="checkbox" checked={form.eventsEnabled} onChange={(e) => setForm({ ...form, eventsEnabled: e.target.checked })} className="h-4 w-4 rounded border-slate-300 text-blue-600" />
+            <ShieldCheck size={16} className="text-emerald-600" />
+            فعال‌سازی بخش رویدادها برای این کافه
+          </label>
+          <p className="mt-2 text-xs text-slate-500">این گزینه فقط برای کافه‌های دارای اشتراک فعال و با مجوز ادمین قابل استفاده است.</p>
+        </div>
+
         <ImageUploader currentImage={form.logoUrl} onImageUploaded={(url) => setForm({ ...form, logoUrl: url })} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -131,8 +148,8 @@ export default function AdminCreateCafePage() {
         {/* Theme Editor */}
         <ThemeEditor value={theme} onChange={setTheme} />
 
-        <div className="pt-4 border-t">
-          <button type="submit" disabled={loading} className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+        <div className="border-t border-slate-200 pt-4">
+          <button type="submit" disabled={loading} className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50">
             {loading ? 'در حال ساخت...' : 'ساخت کافه'}
           </button>
         </div>

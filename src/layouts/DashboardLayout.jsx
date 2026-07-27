@@ -7,6 +7,8 @@ const pageTitles = {
   '/dashboard': { title: 'داشبورد', description: 'خلاصه وضعیت کافه' },
   '/categories': { title: 'دسته‌بندی‌ها', description: 'مدیریت دسته‌بندی منو' },
   '/menu-items': { title: 'آیتم‌های منو', description: 'مدیریت آیتم‌ها' },
+  '/events': { title: 'رویدادها', description: 'مدیریت Promotion و رویدادها' },
+  '/subscription': { title: 'اشتراک', description: 'پلن‌ها و پرداخت' },
   '/settings': { title: 'تنظیمات', description: 'اطلاعات کافه' },
 };
 

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import ImageUploader from '../components/ImageUploader';
 import ThemeEditor from '../components/ThemeEditor';
+import { Sparkles, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 export default function AdminEditCafePage() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ export default function AdminEditCafePage() {
     instagramUrl: '',
     phone: '',
     workingHours: '',
+    eventsEnabled: true,
   });
 
   const [theme, setTheme] = useState({});
@@ -40,6 +42,7 @@ export default function AdminEditCafePage() {
             instagramUrl: cafe.instagramUrl || '',
             phone: cafe.phone || '',
             workingHours: cafe.workingHours || '',
+            eventsEnabled: cafe.eventsEnabled ?? true,
           });
 
           // Parse existing theme JSON
@@ -78,6 +81,7 @@ export default function AdminEditCafePage() {
         instagramUrl: form.instagramUrl,
         phone: form.phone,
         workingHours: form.workingHours,
+        eventsEnabled: form.eventsEnabled,
         themeConfigJson: JSON.stringify(theme),
         // Only include username/password if they are provided
         ...(form.username && { username: form.username }),
@@ -100,11 +104,14 @@ export default function AdminEditCafePage() {
   if (loading) return <div className="p-8 text-center">در حال بارگذاری...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10" dir="rtl">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">ویرایش کافه</h1>
-        <button onClick={() => navigate('/admin/cafes')} className="text-sm text-gray-600 hover:underline">
-          بازگشت به لیست
+    <div className="mx-auto max-w-5xl px-4 py-10" dir="rtl">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[32px] border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-violet-800 p-6 text-white shadow-[0_20px_50px_-20px_rgba(15,23,42,0.65)]">
+        <div>
+          <div className="flex items-center gap-2 text-sm text-slate-300"><Sparkles size={16} /> ویرایش اطلاعات کافه</div>
+          <h1 className="mt-2 text-2xl font-bold">به‌روزرسانی ظاهر، دسترسی و اطلاعات عمومی</h1>
+        </div>
+        <button onClick={() => navigate('/admin/cafes')} className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20">
+          <ArrowLeft size={16} /> بازگشت به لیست
         </button>
       </div>
 
@@ -133,7 +140,7 @@ export default function AdminEditCafePage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">نام کافه *</label>
@@ -157,6 +164,15 @@ export default function AdminEditCafePage() {
           <input name="address" value={form.address} onChange={handleChange} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
         </div>
 
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+            <input type="checkbox" checked={form.eventsEnabled} onChange={(e) => setForm({ ...form, eventsEnabled: e.target.checked })} className="h-4 w-4 rounded border-slate-300 text-blue-600" />
+            <ShieldCheck size={16} className="text-emerald-600" />
+            فعال‌سازی بخش رویدادها برای این کافه
+          </label>
+          <p className="mt-2 text-xs text-slate-500">در صورت غیرفعال بودن، رویدادها برای مشتریان قابل مشاهده نخواهند بود.</p>
+        </div>
+
         <ImageUploader currentImage={form.logoUrl} onImageUploaded={(url) => setForm({ ...form, logoUrl: url })} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -173,8 +189,8 @@ export default function AdminEditCafePage() {
         {/* Theme Editor */}
         <ThemeEditor value={theme} onChange={setTheme} />
 
-        <div className="pt-4 border-t">
-          <button type="submit" disabled={saving} className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+        <div className="border-t border-slate-200 pt-4">
+          <button type="submit" disabled={saving} className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50">
             {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
           </button>
         </div>

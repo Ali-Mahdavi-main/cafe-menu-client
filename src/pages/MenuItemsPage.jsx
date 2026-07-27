@@ -33,6 +33,7 @@ import {
   ArrowDown,
   ListRestart,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 8;
@@ -67,7 +68,6 @@ function Toast({ message, type, onClose }) {
       >
         <X size={16} />
       </button>
-      {/* progress bar */}
       <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-xl bg-white/30">
         <div ref={progressRef} className="h-full rounded-b-xl bg-white/70" style={{ width: '100%' }} />
       </div>
@@ -107,14 +107,10 @@ export default function MenuItemsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filters & search
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Dialogs
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState({
@@ -128,25 +124,20 @@ export default function MenuItemsPage() {
   });
   const [formErrors, setFormErrors] = useState({});
 
-  // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingItem, setDeletingItem] = useState(null);
 
-  // Toast
   const [toast, setToast] = useState(null);
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
   }, []);
   const dismissToast = useCallback(() => setToast(null), []);
 
-  // --- Data Fetching ---
   const fetchCategories = useCallback(async () => {
     try {
       const data = await apiFetch('/category');
       setCategories(Array.isArray(data) ? data : []);
-    } catch (err) {
-      // silently ignore
-    }
+    } catch {}
   }, []);
 
   const fetchItems = useCallback(async () => {
@@ -169,7 +160,6 @@ export default function MenuItemsPage() {
     }
   }, [user?.cafeId, fetchCategories, fetchItems]);
 
-  // --- Filtering & Pagination ---
   const filteredItems = useMemo(() => {
     let result = items;
     if (selectedCategory !== 'all') {
@@ -197,7 +187,6 @@ export default function MenuItemsPage() {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
 
-  // --- Handlers ---
   const openAddDialog = () => {
     setEditingItem(null);
     setForm({
@@ -239,7 +228,6 @@ export default function MenuItemsPage() {
 
   const handleSave = async () => {
     if (!validateForm()) return;
-
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
@@ -249,7 +237,6 @@ export default function MenuItemsPage() {
       isAvailable: form.isAvailable,
       isSpecial: form.isSpecial,
     };
-
     try {
       if (editingItem) {
         await apiFetch(`/menu/${editingItem.id}`, {
@@ -309,7 +296,6 @@ export default function MenuItemsPage() {
     }
   };
 
-  // --- Render ---
   if (error) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -322,23 +308,29 @@ export default function MenuItemsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Toast */}
+    <div className="space-y-6" dir="rtl">
       {toast && <Toast message={toast.message} type={toast.type} onClose={dismissToast} />}
 
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">آیتم‌های منو</h1>
-          <p className="text-sm text-gray-500">مدیریت آیتم‌ها و قیمت‌ها</p>
+      {/* Hero Section – gradient like EventsPage */}
+      <div className="rounded-[32px] bg-gradient-to-br from-fuchsia-700 via-violet-700 to-indigo-700 p-6 text-white shadow-[0_20px_50px_-20px_rgba(91,33,182,0.65)]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-violet-100">بخش منو</p>
+            <h1 className="mt-2 text-2xl font-bold">آیتم‌های منو</h1>
+            <p className="mt-2 max-w-2xl text-sm text-violet-100">
+              آیتم‌های منوی کافه خود را مدیریت کنید. تغییرات بلافاصله در منوی دیجیتال مشتریان نمایش داده می‌شود.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white/10 p-4 backdrop-blur">
+            <Button
+              onClick={openAddDialog}
+              className="gap-2 bg-white/20 text-white hover:bg-white/30 border-0"
+            >
+              <Plus size={16} />
+              افزودن آیتم
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={openAddDialog}
-          className="gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg shadow-blue-500/20 transition-all duration-200 hover:shadow-blue-500/30"
-        >
-          <Plus size={16} />
-          افزودن آیتم
-        </Button>
       </div>
 
       {/* Filters */}
@@ -355,7 +347,7 @@ export default function MenuItemsPage() {
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="rounded-xl border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+          className="rounded-xl border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-200 transition-colors"
         >
           <option value="all">همه دسته‌بندی‌ها</option>
           {categories.map((cat) => (
@@ -380,8 +372,8 @@ export default function MenuItemsPage() {
         )}
       </div>
 
-      {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      {/* Table Card */}
+      <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
         {loading ? (
           <div className="p-6 space-y-4">
             {[...Array(5)].map((_, i) => (
@@ -415,7 +407,7 @@ export default function MenuItemsPage() {
               {pagedItems.map((item, idx) => (
                 <TableRow
                   key={item.id}
-                  className="transition-all duration-200 hover:bg-blue-50/50 animate-fade-in-up"
+                  className="transition-all duration-200 hover:bg-violet-50/50 animate-fade-in-up"
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
                   <TableCell className="font-medium text-gray-900">{item.title}</TableCell>
@@ -449,7 +441,7 @@ export default function MenuItemsPage() {
                         size="icon"
                         variant="ghost"
                         onClick={() => openEditDialog(item)}
-                        className="hover:bg-blue-100 hover:text-blue-600"
+                        className="hover:bg-violet-100 hover:text-violet-600"
                       >
                         <Pencil size={16} />
                       </Button>
@@ -505,7 +497,7 @@ export default function MenuItemsPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md rounded-[28px] border-slate-200 shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
           <DialogHeader>
             <DialogTitle>{editingItem ? 'ویرایش آیتم' : 'افزودن آیتم جدید'}</DialogTitle>
           </DialogHeader>
@@ -551,7 +543,7 @@ export default function MenuItemsPage() {
                 <select
                   value={form.categoryId}
                   onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
                 >
                   <option value="">بدون دسته‌بندی</option>
                   {categories.map((cat) => (
@@ -572,7 +564,7 @@ export default function MenuItemsPage() {
                   type="checkbox"
                   checked={form.isAvailable}
                   onChange={(e) => setForm({ ...form, isAvailable: e.target.checked })}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 text-violet-600 focus:ring-violet-500"
                 />
                 <span className="text-sm text-gray-700">موجود</span>
               </label>
@@ -594,7 +586,7 @@ export default function MenuItemsPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               انصراف
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700">
               {editingItem ? 'ذخیره تغییرات' : 'افزودن'}
             </Button>
           </DialogFooter>
@@ -603,7 +595,7 @@ export default function MenuItemsPage() {
 
       {/* Delete Confirmation */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm rounded-[28px] shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-rose-600">
               <Trash2 size={20} />
@@ -628,7 +620,7 @@ export default function MenuItemsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* CSS animations */}
+      {/* CSS animations (kept from original) */}
       <style>{`
         @keyframes slide-up {
           from { opacity: 0; transform: translateY(20px); }

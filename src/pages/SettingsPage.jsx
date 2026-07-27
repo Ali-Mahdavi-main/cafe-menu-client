@@ -28,7 +28,7 @@ export default function SettingsPage() {
   const [publicAccessKey, setPublicAccessKey] = useState('');
   const publicMenuUrl =
     user && publicAccessKey
-      ? `${window.location.origin}/menu/${user.cafeId}/${publicAccessKey}`
+      ? `${window.location.origin}/qr/${user.cafeId}/${publicAccessKey}`
       : '';
 
   const [loading, setLoading] = useState(true);
@@ -220,7 +220,7 @@ export default function SettingsPage() {
             </Button>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            این لینک را می‌توانید به مشتریان خود بدهید یا در QR Code استفاده کنید
+            این لینک اکنون صفحه‌ی انتخاب منو/رویداد را باز می‌کند و برای QR Code بسیار مناسب است.
           </p>
         </div>
 

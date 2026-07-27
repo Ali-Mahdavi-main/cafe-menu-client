@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
-import { FolderTree, CupSoda, Settings, ChevronLeft } from 'lucide-react';
+import { FolderTree, CupSoda, Settings, ChevronLeft, CalendarDays, CreditCard } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 function StatCard({ title, value, icon: Icon, to, color }) {
   return (
@@ -32,25 +33,23 @@ export default function DashboardPage() {
   const [cafeName, setCafeName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { eventsEnabled } = useAuth();
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        // Step 1: Get current cafe info
         const me = await apiFetch('/auth/me');
         const cafeId = me.cafeId;
         setCafeName(me.cafeName);
 
-        // Step 2: Fetch categories and menu items for this cafe
         const [categoriesRes, menuRes] = await Promise.all([
-        apiFetch('/category'),
-        apiFetch('/menu')        
+          apiFetch('/category'),
+          apiFetch('/menu')
         ]);
 
         const categories = Array.isArray(categoriesRes) ? categoriesRes : [];
         const items = Array.isArray(menuRes) ? menuRes : [];
 
-        // Sort recent items by id descending (assuming higher id = newer)
         const sortedItems = [...items].sort((a, b) => b.id - a.id);
 
         setStats({
@@ -84,80 +83,63 @@ export default function DashboardPage() {
     );
   }
 
+  const statCards = [
+    { title: 'دسته‌بندی‌ها', value: stats.categories, icon: FolderTree, to: '/categories', color: 'bg-blue-500' },
+    { title: 'آیتم‌های منو', value: stats.items, icon: CupSoda, to: '/menu-items', color: 'bg-emerald-500' },
+    { title: 'تنظیمات کافه', value: ' ', icon: Settings, to: '/settings', color: 'bg-purple-500' },
+    { title: 'اشتراک', value: 'پرداخت', icon: CreditCard, to: '/subscription', color: 'bg-amber-500' },
+  ];
+
+  if (eventsEnabled) {
+    statCards.splice(3, 0, { title: 'رویدادها', value: 'مدیریت', icon: CalendarDays, to: '/events', color: 'bg-fuchsia-500' });
+  }
+
+  const quickNavLinks = [
+    { to: '/categories', icon: FolderTree, color: 'text-blue-500', label: 'مدیریت دسته‌بندی‌ها' },
+    { to: '/menu-items', icon: CupSoda, color: 'text-emerald-500', label: 'مدیریت آیتم‌ها' },
+    { to: '/settings', icon: Settings, color: 'text-purple-500', label: 'تنظیمات کافه' },
+  ];
+
+  if (eventsEnabled) {
+    quickNavLinks.push({ to: '/events', icon: CalendarDays, color: 'text-fuchsia-500', label: 'مدیریت رویدادها' });
+  }
+
+  quickNavLinks.push({ to: '/subscription', icon: CreditCard, color: 'text-amber-500', label: 'اشتراک و پرداخت' });
+
   return (
     <div className="space-y-6">
-      {/* Greeting */}
       {cafeName && (
         <h1 className="text-2xl font-bold text-gray-800">
           {cafeName} 👋
         </h1>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard
-          title="دسته‌بندی‌ها"
-          value={stats.categories}
-          icon={FolderTree}
-          to="/categories"
-          color="bg-blue-500"
-        />
-        <StatCard
-          title="آیتم‌های منو"
-          value={stats.items}
-          icon={CupSoda}
-          to="/menu-items"
-          color="bg-emerald-500"
-        />
-        <StatCard
-          title="تنظیمات کافه"
-          value=" "
-          icon={Settings}
-          to="/settings"
-          color="bg-purple-500"
-        />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((card) => (
+          <StatCard key={card.to} {...card} />
+        ))}
       </div>
 
-      {/* Quick Navigation & Recent Items */}
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Quick Navigation */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-gray-800">دسترسی سریع</h2>
           <div className="space-y-2">
-            <Link
-              to="/categories"
-              className="flex items-center justify-between rounded-lg border border-gray-200 p-3 text-sm hover:bg-gray-50 transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <FolderTree size={16} className="text-blue-500" />
-                مدیریت دسته‌بندی‌ها
-              </span>
-              <ChevronLeft size={16} className="text-gray-400" />
-            </Link>
-            <Link
-              to="/menu-items"
-              className="flex items-center justify-between rounded-lg border border-gray-200 p-3 text-sm hover:bg-gray-50 transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <CupSoda size={16} className="text-emerald-500" />
-                مدیریت آیتم‌ها
-              </span>
-              <ChevronLeft size={16} className="text-gray-400" />
-            </Link>
-            <Link
-              to="/settings"
-              className="flex items-center justify-between rounded-lg border border-gray-200 p-3 text-sm hover:bg-gray-50 transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <Settings size={16} className="text-purple-500" />
-                تنظیمات کافه
-              </span>
-              <ChevronLeft size={16} className="text-gray-400" />
-            </Link>
+            {quickNavLinks.map(({ to, icon: Icon, color, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className="flex items-center justify-between rounded-lg border border-gray-200 p-3 text-sm hover:bg-gray-50 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Icon size={16} className={color} />
+                  {label}
+                </span>
+                <ChevronLeft size={16} className="text-gray-400" />
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* Recent Menu Items */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-gray-800">آیتم‌های اخیر</h2>
           {stats.recentItems.length === 0 ? (
