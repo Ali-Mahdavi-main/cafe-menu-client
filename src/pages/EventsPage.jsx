@@ -3,13 +3,30 @@ import { apiFetch } from '../services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CalendarDays, Loader2, PlusCircle, Trash2, Save, Sparkles, ImagePlus } from 'lucide-react';
+import moment from 'moment-jalaali';
+
+// Helper: convert Shamsi string (like "1402/06/15 18:00") to ISO (Gregorian)
+function shamsiToGregorianISO(shamsiStr) {
+  if (!shamsiStr) return new Date().toISOString();
+  // moment-jalaali can parse "jYYYY/jMM/jDD HH:mm"
+  const m = moment(shamsiStr, 'jYYYY/jMM/jDD HH:mm');
+  if (m.isValid()) return m.toISOString();
+  // Fallback: just use current time
+  return new Date().toISOString();
+}
+
+// Helper: convert ISO date to Shamsi string for display
+function gregorianToShamsi(isoStr) {
+  if (!isoStr) return '';
+  return moment(isoStr).format('jYYYY/jMM/jDD HH:mm');
+}
 
 const emptyForm = {
   title: '',
   description: '',
   imageUrl: '',
   fee: 0,
-  eventDate: '',
+  eventDate: '',   // Shamsi string
   isActive: true,
 };
 
@@ -42,28 +59,33 @@ export default function EventsPage() {
       setSaving(true);
       let imageUrl = form.imageUrl;
 
+      // Upload image if a file is selected
       if (imageFile) {
         const uploadData = new FormData();
         uploadData.append('file', imageFile);
         const uploaded = await apiFetch('/upload', {
           method: 'POST',
           body: uploadData,
-          headers: {},
+          headers: {},   // let browser set Content-Type for FormData
         });
         imageUrl = uploaded.imageUrl;
       }
 
+      // Build payload – no cafeId, fee is number, eventDate converted to ISO
       const payload = {
-        ...form,
+        title: form.title,
+        description: form.description,
         imageUrl,
-        cafeId: Number(form.cafeId || 0),
         fee: Number(form.fee || 0),
-        eventDate: form.eventDate ? new Date(form.eventDate).toISOString() : new Date().toISOString(),
+        eventDate: shamsiToGregorianISO(form.eventDate),
+        isActive: form.isActive,
       };
+
       await apiFetch('/events', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
+
       setForm(emptyForm);
       setImageFile(null);
       await fetchEvents();
@@ -96,11 +118,16 @@ export default function EventsPage() {
   return (
     <div className="space-y-6" dir="rtl">
       {feedback && (
-        <div className={`rounded-2xl border px-4 py-3 text-sm ${feedback.type === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+        <div className={`rounded-2xl border px-4 py-3 text-sm ${
+          feedback.type === 'error'
+            ? 'border-red-200 bg-red-50 text-red-700'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+        }`}>
           {feedback.message}
         </div>
       )}
 
+      {/* Hero */}
       <div className="rounded-[32px] bg-gradient-to-br from-fuchsia-700 via-violet-700 to-indigo-700 p-6 text-white shadow-[0_20px_50px_-20px_rgba(91,33,182,0.65)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -120,33 +147,73 @@ export default function EventsPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        {/* Form */}
         <form onSubmit={handleSave} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)] space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold text-slate-800">
             <PlusCircle size={18} className="text-violet-600" />
             افزودن رویداد جدید
           </div>
-          <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="عنوان رویداد" />
-          <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="توضیح رویداد" />
+
+          <Input
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            placeholder="عنوان رویداد"
+          />
+          <Input
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="توضیح رویداد"
+          />
+
+          {/* Image upload / URL */}
           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3">
             <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600">
               <ImagePlus size={16} className="text-violet-600" />
               <span>{imageFile ? imageFile.name : 'انتخاب تصویر از دستگاه'}</span>
-              <input type="file" accept="image/*" className="hidden" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              />
             </label>
           </div>
-          <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="یا لینک تصویر را وارد کنید" />
-          <Input type="number" value={form.fee} onChange={(e) => setForm({ ...form, fee: e.target.value })} placeholder="هزینه" />
-          <Input type="datetime-local" value={form.eventDate} onChange={(e) => setForm({ ...form, eventDate: e.target.value })} />
+          <Input
+            value={form.imageUrl}
+            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+            placeholder="یا لینک تصویر را وارد کنید"
+          />
+
+          <Input
+            type="number"
+            value={form.fee}
+            onChange={(e) => setForm({ ...form, fee: e.target.value })}
+            placeholder="هزینه (تومان)"
+          />
+
+          {/* Shamsi date field */}
+          <Input
+            value={form.eventDate}
+            onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
+            placeholder="تاریخ شمسی (مثال: ۱۴۰۲/۰۶/۱۵ ۱۸:۰۰)"
+          />
+
           <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+            />
             فعال باشد
           </label>
+
           <Button type="submit" disabled={saving} className="gap-2">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             ذخیره رویداد
           </Button>
         </form>
 
+        {/* Event List */}
         <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
           <div className="flex items-center gap-2 text-lg font-semibold text-slate-800">
             <CalendarDays size={18} className="text-blue-600" />
@@ -156,13 +223,22 @@ export default function EventsPage() {
             {events.length === 0 ? (
               <p className="text-sm text-slate-500">هنوز رویدادی ثبت نشده است.</p>
             ) : events.map((event) => (
-              <div key={event.id} className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 p-4">
+              <div
+                key={event.id}
+                className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 p-4"
+              >
                 <div>
                   <p className="font-semibold text-slate-800">{event.title}</p>
                   <p className="mt-1 text-sm text-slate-500">{event.description}</p>
-                  <p className="mt-2 text-xs text-slate-400">{event.eventDateShamsi || event.eventDate}</p>
+                  {/* Show Shamsi date from API or convert here */}
+                  <p className="mt-2 text-xs text-slate-400">
+                    {event.eventDateShamsi || gregorianToShamsi(event.eventDate)}
+                  </p>
                 </div>
-                <button onClick={() => handleDelete(event.id)} className="text-sm text-red-600 hover:underline">
+                <button
+                  onClick={() => handleDelete(event.id)}
+                  className="text-sm text-red-600 hover:underline"
+                >
                   <Trash2 size={16} />
                 </button>
               </div>

@@ -152,26 +152,28 @@ export default function CategoriesPage() {
       )}
 
       {/* Hero Section */}
-      <div className="rounded-[32px] bg-gradient-to-br from-fuchsia-700 via-violet-700 to-indigo-700 p-6 text-white shadow-[0_20px_50px_-20px_rgba(91,33,182,0.65)]">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-violet-100">بخش دسته‌بندی‌ها</p>
-            <h1 className="mt-2 text-2xl font-bold">دسته‌بندی‌های منو</h1>
-            <p className="mt-2 max-w-2xl text-sm text-violet-100">
-              دسته‌بندی‌های خود را مدیریت کنید تا آیتم‌های منو به صورت سازمان‌یافته نمایش داده شوند.
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white/10 p-4 backdrop-blur">
-            <Button
-              onClick={openAddDialog}
-              className="gap-2 bg-white/20 text-white hover:bg-white/30 border-0"
-            >
-              <Plus size={16} />
-              افزودن دسته‌بندی
-            </Button>
-          </div>
-        </div>
+      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-fuchsia-700 via-violet-700 to-indigo-700 p-6 text-white shadow-[0_20px_50px_-20px_rgba(91,33,182,0.65)] sm:p-8">
+    {/* decorative glow — subtle depth, not noise */}
+    <div className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
+    <div className="pointer-events-none absolute -bottom-28 -right-16 h-72 w-72 rounded-full bg-indigo-400/20 blur-3xl" />
+
+    <div className="relative flex flex-wrap items-start justify-between gap-6">
+      <div>
+        <p className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-violet-100 ring-1 ring-white/15">
+          بخش دسته‌بندی‌ها
+        </p>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight">دسته‌بندی‌های منو</h1>
       </div>
+
+    <Button
+      onClick={openAddDialog}
+      className="gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-violet-800 shadow-md transition hover:bg-violet-50 hover:shadow-lg"
+    >
+          <Plus size={16} />
+          افزودن دسته‌بندی
+        </Button>
+      </div>
+    </div>
 
       {/* Search */}
       <div className="relative w-full max-w-sm">
@@ -186,99 +188,141 @@ export default function CategoriesPage() {
 
       {/* Table Card */}
       <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
-        <Table>
-          <TableHeader className="bg-gray-50">
-            <TableRow>
-              <TableHead className="text-right font-semibold">نام دسته‌بندی</TableHead>
-              <TableHead className="w-24"></TableHead>
+      <Table>
+        <TableHeader className="bg-slate-50/80">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="h-12 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+              نام دسته‌بندی
+            </TableHead>
+            <TableHead className="w-24" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredCategories.length === 0 ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={2} className="py-16 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                    <LayoutGrid size={20} />
+                  </div>
+                  <p className="text-sm font-medium text-slate-500">هیچ دسته‌بندی‌ای یافت نشد</p>
+                  <p className="text-xs text-slate-400">یک دسته‌بندی جدید اضافه کنید تا اینجا نمایش داده شود</p>
+                </div>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCategories.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={2} className="text-center text-gray-400 py-8">
-                  هیچ دسته‌بندی‌ای یافت نشد.
+          ) : (
+            filteredCategories.map((cat) => (
+              <TableRow
+                key={cat.id}
+                className="group border-slate-100 transition-colors hover:bg-violet-50/40"
+              >
+                <TableCell className="py-3.5 font-medium text-slate-800">
+                  {cat.name}
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => openEditDialog(cat)}
+                      title="ویرایش"
+                      className="h-8 w-8 rounded-full text-slate-500 hover:bg-violet-100 hover:text-violet-700"
+                    >
+                      <Pencil size={15} />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => openDeleteDialog(cat)}
+                      title="حذف"
+                      className="h-8 w-8 rounded-full text-slate-500 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 size={15} />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredCategories.map((cat) => (
-                <TableRow key={cat.id} className="hover:bg-violet-50/50">
-                  <TableCell className="font-medium">{cat.name}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1 justify-end">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => openEditDialog(cat)}
-                        title="ویرایش"
-                        className="hover:bg-violet-100 hover:text-violet-600"
-                      >
-                        <Pencil size={16} />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => openDeleteDialog(cat)}
-                        title="حذف"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
       {/* Add / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="rounded-[28px] border-slate-200 shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
-          <DialogHeader>
-            <DialogTitle>
-              {editingCategory ? 'ویرایش دسته‌بندی' : 'افزودن دسته‌بندی جدید'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">نام</label>
-            <Input
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              placeholder="مثال: نوشیدنی گرم"
-            />
-          </div>
-          <DialogFooter className="mt-6 gap-2">
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              انصراف
-            </Button>
-            <Button onClick={handleSave} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700">
-              {editingCategory ? 'ذخیره تغییرات' : 'افزودن'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+  <DialogContent className="sm:max-w-md rounded-2xl border-0 bg-white/95 backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(15,23,42,0.35)] p-6">
+    <DialogHeader className="space-y-1">
+      <DialogTitle className="text-center text-lg font-semibold text-slate-900">
+        {editingCategory ? 'ویرایش دسته‌بندی' : 'افزودن دسته‌بندی جدید'}
+      </DialogTitle>
+      <p className="text-center text-sm text-slate-500">
+        {editingCategory ? 'اطلاعات دسته‌بندی را ویرایش کنید' : 'یک دسته‌بندی جدید برای منو ایجاد کنید'}
+      </p>
+    </DialogHeader>
+
+    <div className="mt-6">
+      <label className="mb-2 block text-sm font-medium text-slate-700">
+        نام دسته‌بندی
+      </label>
+      <Input
+        value={formName}
+        onChange={(e) => setFormName(e.target.value)}
+        placeholder="مثال: نوشیدنی گرم"
+        className="h-11 rounded-xl border-slate-200 bg-slate-50/50 text-right transition focus-visible:ring-2 focus-visible:ring-slate-900/10 focus-visible:border-slate-300"
+      />
+    </div>
+
+    <DialogFooter className="mt-8 flex-row-reverse gap-2 sm:justify-start">
+      <Button
+        onClick={handleSave}
+        className="flex-1 rounded-xl bg-slate-900 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 hover:shadow-md"
+      >
+        {editingCategory ? 'ذخیره تغییرات' : 'افزودن دسته‌بندی'}
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => setDialogOpen(false)}
+        className="flex-1 rounded-xl border-slate-200 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+      >
+        انصراف
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="rounded-[28px] shadow-[0_16px_45px_-24px_rgba(15,23,42,0.35)]">
-          <DialogHeader>
-            <DialogTitle className="text-rose-600">حذف دسته‌بندی</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-gray-600 mt-2">
-            آیا از حذف «{deletingCategory?.name}» اطمینان دارید؟ این عمل قابل بازگشت نیست.
-          </p>
-          <DialogFooter className="mt-6 gap-2">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              انصراف
-            </Button>
-            <Button variant="destructive" onClick={handleDelete} className="bg-rose-600 hover:bg-rose-700">
-              حذف
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogContent className="sm:max-w-md rounded-2xl border-0 bg-white shadow-[0_25px_60px_-15px_rgba(15,23,42,0.35)] p-6">
+        <DialogHeader className="items-center space-y-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+            <Trash2 size={20} />
+          </div>
+          <DialogTitle className="text-center text-lg font-semibold text-slate-900">
+            حذف دسته‌بندی
+          </DialogTitle>
+        </DialogHeader>
+
+        <p className="mt-1 text-center text-sm leading-relaxed text-slate-500">
+          آیا از حذف «<span className="font-medium text-slate-700">{deletingCategory?.name}</span>» اطمینان دارید؟
+          این عمل قابل بازگشت نیست.
+        </p>
+
+        <DialogFooter className="mt-8 flex-row-reverse gap-2 sm:justify-start">
+          <Button
+            onClick={handleDelete}
+            className="flex-1 rounded-xl bg-rose-600 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700 hover:shadow-md"
+          >
+            حذف دسته‌بندی
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setDeleteDialogOpen(false)}
+            className="flex-1 rounded-xl border-slate-200 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+          >
+            انصراف
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </div>
   );
 }

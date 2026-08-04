@@ -14,6 +14,7 @@ import AdminCreateCafePage from './pages/AdminCreateCafePage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminCafesListPage from './pages/AdminCafesListPage';
 import AdminEditCafePage from './pages/AdminEditCafePage';
+import AdminSubscriptionPage from './pages/AdminSubscriptionPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import EventsPage from './pages/EventsPage';
 import QRLandingPage from './pages/QRLandingPage';
@@ -69,6 +70,14 @@ export default function App() {
             element={
               <AdminProtectedRoute>
                 <AdminEditCafePage />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/subscription"
+            element={
+              <AdminProtectedRoute>
+                <AdminSubscriptionPage />
               </AdminProtectedRoute>
             }
           />

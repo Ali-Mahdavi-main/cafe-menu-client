@@ -180,7 +180,7 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
           <ChevronUp size={18} className="-rotate-90 text-gray-600" />
         </button>
       )}
-      <div className="flex gap-3 overflow-x-auto py-2 px-1 scrollbar-hide scroll-sm-auto">
+      <div className="flex gap-3 overflow-x-auto py-2 px-2 scrollbar-hide scroll-sm-auto">
         <button
           onClick={() => onSelect('all')}
           className={`relative flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition-all duration-200 hover:scale-105 ${
@@ -503,7 +503,7 @@ function CafeFooter({ address, phone, instagram, workingHours, cafeName, theme }
     return (
       <footer className="mt-16 p-5 text-center text-sm" style={footerStyle}>
         {content}
-        <p className="mt-4 opacity-40 text-xs">{copyright} | طراحی شده با افتخار</p>
+        <p className="mt-4 opacity-40 text-xs">{copyright}</p>
       </footer>
     );
 
