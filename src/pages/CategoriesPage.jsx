@@ -152,7 +152,7 @@ export default function CategoriesPage() {
       )}
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-fuchsia-700 via-violet-700 to-indigo-700 p-6 text-white shadow-[0_20px_50px_-20px_rgba(91,33,182,0.65)] sm:p-8">
+      <div className="relative overflow-hidden rounded-4xl bg-linear-to-br from-fuchsia-700 via-violet-700 to-indigo-700 p-6 text-white shadow-[0_20px_50px_-20px_rgba(91,33,182,0.65)] sm:p-8">
     {/* decorative glow — subtle depth, not noise */}
     <div className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
     <div className="pointer-events-none absolute -bottom-28 -right-16 h-72 w-72 rounded-full bg-indigo-400/20 blur-3xl" />
