@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Search, Sparkles, X } from 'lucide-react';
+import { Plus, Pencil,LayoutGrid , Trash2, Search, Sparkles, X } from 'lucide-react';
 
 export default function CategoriesPage() {
   const { user } = useAuth();
