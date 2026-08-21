@@ -687,6 +687,20 @@ export default function PublicMenuPage() {
           cafeName={data?.cafeName}
           theme={theme}
         />
+        <div className="mt-6 flex justify-center">
+          <a
+            referrerPolicy="origin"
+            target="_blank"
+            href="https://trustseal.enamad.ir/?id=7409176&Code=IzQz3pFc84IStgN0GEPkppcNx8RhZYEb"
+          >
+            <img
+              referrerPolicy="origin"
+              src="https://trustseal.enamad.ir/logo.aspx?id=7409176&Code=IzQz3pFc84IStgN0GEPkppcNx8RhZYEb"
+              alt="نماد اعتماد الکترونیکی"
+              style={{ cursor: 'pointer' }}
+            />
+          </a>
+        </div>
       </div>
 
       {showScrollTop && (
