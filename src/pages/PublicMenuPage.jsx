@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiFetch } from '../services/api';
-import { Phone, MapPin, ExternalLink, Clock, Star, Sparkles, ChevronUp, Award } from 'lucide-react';
+import { Phone, MapPin, ExternalLink, Clock, Star, Sparkles, ChevronUp, Award, X } from 'lucide-react';
 
 /* ---------- Helpers ---------- */
 const aspectToPadding = (ratio) => {
@@ -239,13 +239,17 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
 }
 
 /* ---------- Menu Item Card ---------- */
-function MenuItemCard({ item, theme, isSpecial, index }) {
+function MenuItemCard({ item, theme, isSpecial, index, onClick }) {
   const style = theme.cardStyle || 1;
   const imagePad = aspectToPadding(theme.imageAspectRatio);
   const isGlass = style === 5;
   const isOverlay = style === 4;
 
-  const baseClass = `relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+  const handleClick = () => {
+    if (onClick) onClick(item);
+  };
+
+  const baseClass = `relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer active:scale-[0.98] ${
     isSpecial ? 'ring-2 ring-amber-400/60 animate-pulse-glow' : ''
   }`;
 
@@ -274,7 +278,7 @@ function MenuItemCard({ item, theme, isSpecial, index }) {
 
   if (style === 1) {
     return (
-      <div className={`${baseClass} flex h-full`} style={cardStyle}>
+      <div className={`${baseClass} flex h-full`} style={cardStyle} onClick={handleClick}>
         {specialBadge}
         {item.imageUrl && (
           <div className="w-24 sm:w-28 flex-shrink-0 relative" style={imagePad ? { paddingBottom: imagePad } : {}}>
@@ -300,7 +304,7 @@ function MenuItemCard({ item, theme, isSpecial, index }) {
 
   if (style === 2) {
     return (
-      <div className={`${baseClass} flex flex-col h-full`} style={cardStyle}>
+      <div className={`${baseClass} flex flex-col h-full`} style={cardStyle} onClick={handleClick}>
         {specialBadge}
         {item.imageUrl && (
           <div className="w-full relative" style={imagePad ? { paddingBottom: imagePad } : { height: '45%' }}>
@@ -327,12 +331,13 @@ function MenuItemCard({ item, theme, isSpecial, index }) {
   if (style === 3) {
     return (
       <div
-        className={`flex items-center gap-3 py-3 px-2 transition-colors rounded-xl ${
+        className={`relative flex items-center gap-3 py-3 px-2 transition-colors rounded-xl cursor-pointer active:scale-[0.98] ${
           isSpecial ? 'bg-amber-50/60 ring-1 ring-amber-200' : ''
         }`}
         style={{ borderBottom: isSpecial ? 'none' : `1px solid ${theme.borderColor}50` }}
+        onClick={handleClick}
       >
-        {specialBadge && <div className="absolute top-3 left-3 z-20">{specialBadge}</div>}
+        {specialBadge}
         {item.imageUrl && (
           <div className="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm">
             <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
@@ -353,7 +358,7 @@ function MenuItemCard({ item, theme, isSpecial, index }) {
 
   if (style === 4) {
     return (
-      <div className={`${baseClass} h-full min-h-[180px]`} style={cardStyle}>
+      <div className={`${baseClass} h-full min-h-[180px]`} style={cardStyle} onClick={handleClick}>
         {specialBadge}
         {item.imageUrl && (
           <>
@@ -378,8 +383,8 @@ function MenuItemCard({ item, theme, isSpecial, index }) {
 
   if (style === 5) {
     return (
-      <div className={`${baseClass} flex flex-col h-full`} style={cardStyle}>
-        {specialBadge && <div className="absolute top-3 left-3 z-20">{specialBadge}</div>}
+      <div className={`${baseClass} flex flex-col h-full`} style={cardStyle} onClick={handleClick}>
+        {specialBadge}
         {item.imageUrl && (
           <div className="w-full relative" style={imagePad ? { paddingBottom: imagePad } : { height: '45%' }}>
             <img src={item.imageUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
@@ -406,6 +411,127 @@ function MenuItemCard({ item, theme, isSpecial, index }) {
   }
 
   return null;
+}
+
+/* ---------- Menu Item Modal (popup) ---------- */
+function MenuItemModal({ item, categoryName, theme, onClose }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  if (!item) return null;
+
+  const style = theme.cardStyle || 1;
+  const isGlass = style === 5;
+  const isOverlay = style === 4;
+  const primary = theme.primaryColor;
+  const lightSurface = !isGlass && !isOverlay;
+
+  const cardStyle = {
+    backgroundColor: isOverlay ? '#111' : (theme.cardBackground || '#ffffff'),
+    borderColor: theme.borderColor || '#e2e8f0',
+    borderRadius: `${theme.borderRadius}px`,
+    boxShadow: '0 25px 60px rgba(0,0,0,0.35)',
+  };
+
+  if (isGlass) {
+    cardStyle.background = 'linear-gradient(135deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.08) 100%)';
+    cardStyle.backdropFilter = 'blur(24px)';
+    cardStyle.border = '1px solid rgba(255,255,255,0.35)';
+  }
+
+  const lightText = isOverlay || isGlass;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      style={{ animation: 'fadeInUp 0.2s ease-out' }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md max-h-[85vh] overflow-y-auto border scrollbar-hide"
+        style={cardStyle}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          aria-label="بستن"
+          className="absolute top-3 left-3 z-20 rounded-full bg-black/45 backdrop-blur-sm p-2 text-white hover:bg-black/65 transition-colors"
+        >
+          <X size={18} />
+        </button>
+
+        {item.isSpecial && (
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-white shadow-lg">
+            <Star size={10} /> ویژه
+          </div>
+        )}
+
+        {item.imageUrl && (
+          <div className="relative w-full" style={{ paddingBottom: '62%' }}>
+            <img src={item.imageUrl} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
+            {isOverlay && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+            )}
+            {isGlass && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            )}
+          </div>
+        )}
+
+        <div className={`p-5 ${isOverlay ? 'relative -mt-14 z-10' : ''}`}>
+          {categoryName && (
+            <span
+              className="inline-block mb-2 rounded-full px-3 py-1 text-xs font-medium"
+              style={{
+                backgroundColor: lightText ? 'rgba(255,255,255,0.15)' : `${primary}12`,
+                color: lightText ? '#fff' : primary,
+              }}
+            >
+              {categoryName}
+            </span>
+          )}
+
+          <h2
+            className={`font-bold ${lightText ? 'text-white drop-shadow-md' : ''}`}
+            style={{ fontSize: theme.headingFontSize * 0.55, color: lightText ? undefined : theme.textColor }}
+          >
+            {item.title}
+          </h2>
+
+          {item.description && (
+            <p
+              className={`mt-2 leading-relaxed ${lightText ? 'text-white/85' : 'opacity-70'}`}
+              style={{ fontSize: theme.bodyFontSize }}
+            >
+              {item.description}
+            </p>
+          )}
+
+          <div className="mt-5 flex items-center justify-between">
+            <span
+              className={`font-bold ${lightText ? 'text-white drop-shadow-md' : ''}`}
+              style={{ color: lightText ? undefined : theme.priceColor, fontSize: theme.bodyFontSize * 1.35 }}
+            >
+              {item.price?.toLocaleString()} تومان
+            </span>
+            {item.isAvailable === false && (
+              <span className="text-xs font-medium text-red-400">ناموجود</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ---------- Category Heading ---------- */
@@ -556,6 +682,8 @@ export default function PublicMenuPage() {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [activeItem, setActiveItem] = useState(null);
+  const [activeItemCategory, setActiveItemCategory] = useState(null);
 
   useEffect(() => {
     setSelectedCategory('all');
@@ -590,6 +718,16 @@ export default function PublicMenuPage() {
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
+  }, []);
+
+  const openItem = useCallback((item, categoryName) => {
+    setActiveItem(item);
+    setActiveItemCategory(categoryName);
+  }, []);
+
+  const closeItem = useCallback(() => {
+    setActiveItem(null);
+    setActiveItemCategory(null);
   }, []);
 
   const categories = useMemo(() => (Array.isArray(data?.menu) ? data.menu : []), [data]);
@@ -643,6 +781,7 @@ export default function PublicMenuPage() {
               theme={theme}
               isSpecial={true}
               index={0}
+              onClick={(item) => openItem(item, specialItem.categoryName)}
             />
           </div>
         )}
@@ -662,7 +801,13 @@ export default function PublicMenuPage() {
                 <div className="space-y-2">
                   {allCatItems.map((item, idx) => (
                     <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 60}ms` }}>
-                      <MenuItemCard item={item} theme={theme} isSpecial={item.isSpecial} index={idx} />
+                      <MenuItemCard
+                        item={item}
+                        theme={theme}
+                        isSpecial={item.isSpecial}
+                        index={idx}
+                        onClick={(clickedItem) => openItem(clickedItem, category.categoryName)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -670,7 +815,13 @@ export default function PublicMenuPage() {
                 <div className={`grid ${gridClass} gap-4`}>
                   {allCatItems.map((item, idx) => (
                     <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(catIdx * 3 + idx) * 60}ms` }}>
-                      <MenuItemCard item={item} theme={theme} isSpecial={item.isSpecial} index={idx} />
+                      <MenuItemCard
+                        item={item}
+                        theme={theme}
+                        isSpecial={item.isSpecial}
+                        index={idx}
+                        onClick={(clickedItem) => openItem(clickedItem, category.categoryName)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -710,6 +861,15 @@ export default function PublicMenuPage() {
         >
           <ChevronUp size={20} className="text-gray-700" />
         </button>
+      )}
+
+      {activeItem && (
+        <MenuItemModal
+          item={activeItem}
+          categoryName={activeItemCategory}
+          theme={theme}
+          onClose={closeItem}
+        />
       )}
     </div>
   );
