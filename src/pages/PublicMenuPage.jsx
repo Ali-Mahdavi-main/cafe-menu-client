@@ -129,6 +129,7 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
   const scrollRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
+  const isTextOnly = theme.categoryNavBarStyle === 'text';
 
   const allItems = useMemo(() => categories.flatMap((c) => c.items), [categories]);
   const allImages = useMemo(() => {
@@ -136,14 +137,6 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
     const shuffled = [...allItems].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 4);
   }, [allItems]);
-
-  const categoryImages = useMemo(() => {
-    const map = {};
-    categories.forEach((cat) => {
-      if (cat.items.length > 0) map[cat.categoryName] = allItems.find((i) => i.categoryName === cat.categoryName)?.imageUrl;
-    });
-    return map;
-  }, [categories]);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -173,6 +166,42 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
     }
   };
 
+  /* ---- Text-only pill mode ---- */
+  if (isTextOnly) {
+    return (
+      <div className="relative mb-10">
+        <div className="flex gap-2 overflow-x-auto py-2 px-2 scrollbar-hide">
+          <button
+            onClick={() => onSelect('all')}
+            className="flex-shrink-0 whitespace-nowrap font-medium transition-all duration-200 px-4 py-2 text-sm"
+            style={{
+              backgroundColor: selected === 'all' ? theme.primaryColor : `${theme.primaryColor}14`,
+              color: selected === 'all' ? '#fff' : theme.primaryColor,
+              borderRadius: `${theme.borderRadius}px`,
+            }}
+          >
+            همه
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.categoryName}
+              onClick={() => onSelect(cat.categoryName)}
+              className="flex-shrink-0 whitespace-nowrap font-medium transition-all duration-200 px-4 py-2 text-sm"
+              style={{
+                backgroundColor: selected === cat.categoryName ? theme.primaryColor : `${theme.primaryColor}14`,
+                color: selected === cat.categoryName ? '#fff' : theme.primaryColor,
+                borderRadius: `${theme.borderRadius}px`,
+              }}
+            >
+              {cat.categoryName}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* ---- Image thumbnail mode ---- */
   return (
     <div className="relative mb-10" ref={scrollRef}>
       {showLeft && (
@@ -183,10 +212,15 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
       <div className="flex gap-3 overflow-x-auto py-2 px-2 scrollbar-hide scroll-sm-auto">
         <button
           onClick={() => onSelect('all')}
-          className={`relative flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition-all duration-200 hover:scale-105 ${
-            selected === 'all' ? 'ring-2 ring-offset-2 ring-blue-500 scale-105' : 'opacity-80 hover:opacity-100'
-          }`}
-          style={{ borderRadius: `${theme.borderRadius}px` }}
+          className="relative flex-shrink-0 w-20 h-20 overflow-hidden transition-all duration-200 hover:scale-105"
+          style={{
+            borderRadius: `${theme.borderRadius}px`,
+            opacity: selected === 'all' ? 1 : 0.8,
+            transform: selected === 'all' ? 'scale(1.05)' : undefined,
+            boxShadow: selected === 'all'
+              ? `0 0 0 2px ${theme.backgroundColor || '#fff'}, 0 0 0 4px ${theme.primaryColor}`
+              : undefined,
+          }}
         >
           <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-px bg-white/20">
             {allImages.slice(0, 4).map((item, idx) => (
@@ -206,14 +240,20 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
 
         {categories.map((cat) => {
           const img = cat.items[0]?.imageUrl;
+          const isSelected = selected === cat.categoryName;
           return (
             <button
               key={cat.categoryName}
               onClick={() => onSelect(cat.categoryName)}
-              className={`relative flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden shadow-sm transition-all duration-200 hover:scale-105 ${
-                selected === cat.categoryName ? 'ring-2 ring-offset-2 ring-blue-500 scale-105' : 'opacity-80 hover:opacity-100'
-              }`}
-              style={{ borderRadius: `${theme.borderRadius}px` }}
+              className="relative flex-shrink-0 w-20 h-20 overflow-hidden transition-all duration-200 hover:scale-105"
+              style={{
+                borderRadius: `${theme.borderRadius}px`,
+                opacity: isSelected ? 1 : 0.8,
+                transform: isSelected ? 'scale(1.05)' : undefined,
+                boxShadow: isSelected
+                  ? `0 0 0 2px ${theme.backgroundColor || '#fff'}, 0 0 0 4px ${theme.primaryColor}`
+                  : undefined,
+              }}
             >
               {img ? (
                 <img src={img} alt={cat.categoryName} className="absolute inset-0 w-full h-full object-cover" />
@@ -535,7 +575,17 @@ function MenuItemModal({ item, categoryName, theme, onClose }) {
 }
 
 /* ---------- Category Heading ---------- */
-function CategoryHeading({ name, theme }) {
+function pickStableImage(items, seed) {
+  const withImages = (items || []).filter((i) => i.imageUrl);
+  if (withImages.length === 0) return null;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return withImages[hash % withImages.length].imageUrl;
+}
+
+function CategoryHeading({ name, items, theme }) {
   const style = theme.categoryStyle || 1;
   const primary = theme.primaryColor;
   const fs = theme.headingFontSize * 0.7;
@@ -569,16 +619,27 @@ function CategoryHeading({ name, theme }) {
         </h2>
       </div>
     );
-  if (style === 5)
+  if (style === 5) {
+    const bgImage = pickStableImage(items, name);
     return (
       <div className="relative mb-6 h-20 w-full rounded-2xl overflow-hidden flex items-center justify-center" style={{ borderRadius: `${theme.borderRadius}px` }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-fuchsia-500" />
-        <div className="absolute inset-0 bg-black/30" />
+        {bgImage ? (
+          <>
+            <div
+              className="absolute inset-0 bg-cover bg-center scale-110"
+              style={{ backgroundImage: `url(${bgImage})`, filter: 'blur(10px)' }}
+            />
+            <div className="absolute inset-0 bg-black/45" />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-fuchsia-500" />
+        )}
         <h2 className="relative z-10 font-bold text-white drop-shadow-lg" style={{ fontSize: fs * 1.1 }}>
           {name}
         </h2>
       </div>
     );
+  }
   return null;
 }
 
@@ -795,7 +856,7 @@ export default function PublicMenuPage() {
 
           return (
             <section key={category.categoryName} className="mb-12">
-              <CategoryHeading name={category.categoryName} theme={theme} />
+              <CategoryHeading name={category.categoryName} items={category.items} theme={theme} />
 
               {isListStyle ? (
                 <div className="space-y-2">
