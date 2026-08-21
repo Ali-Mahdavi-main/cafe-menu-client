@@ -19,12 +19,15 @@ import SubscriptionPage from './pages/SubscriptionPage';
 import EventsPage from './pages/EventsPage';
 import QRLandingPage from './pages/QRLandingPage';
 import PublicEventsPage from './pages/PublicEventsPage';
+import RootFallbackPage from './pages/RootFallbackPage';
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Public root domain fallback */}
+          <Route path="/" element={<RootFallbackPage />} />
           {/* Café login */}
           <Route path="/login" element={<LoginPage />} />
 
@@ -37,7 +40,6 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="menu-items" element={<MenuItemsPage />} />
