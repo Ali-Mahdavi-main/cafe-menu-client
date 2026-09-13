@@ -100,6 +100,7 @@ export default function MenuItemsPage() {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [parentCategories, setParentCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -131,8 +132,12 @@ export default function MenuItemsPage() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const data = await apiFetch('/category');
-      setCategories(Array.isArray(data) ? data : []);
+      const [cats, parents] = await Promise.all([
+        apiFetch('/category'),
+        apiFetch('/parent-category'),
+      ]);
+      setCategories(Array.isArray(cats) ? cats : []);
+      setParentCategories(Array.isArray(parents) ? parents : []);
     } catch {}
   }, []);
 
@@ -159,8 +164,10 @@ export default function MenuItemsPage() {
   const filteredItems = useMemo(() => {
     let result = items;
     if (selectedCategory !== 'all') {
-      const catName = categories.find((c) => c.id == selectedCategory)?.name;
-      if (catName) result = result.filter((item) => item.categoryName === catName);
+      const cat = categories.find((c) => c.id == selectedCategory);
+      if (cat) {
+        result = result.filter((item) => item.categoryName === cat.name);
+      }
     }
     const term = searchTerm.trim().toLowerCase();
     if (term) {
@@ -574,11 +581,16 @@ export default function MenuItemsPage() {
                   className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 text-sm transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                 >
                   <option value="">بدون دسته‌بندی</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
+                  {categories.map((cat) => {
+                    const parentName = cat.parentCategoryName
+                      ? parentCategories.find((p) => p.id === cat.parentCategoryId)?.name
+                      : null;
+                    return (
+                      <option key={cat.id} value={cat.id}>
+                        {parentName ? `${parentName} → ${cat.name}` : cat.name}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             </div>

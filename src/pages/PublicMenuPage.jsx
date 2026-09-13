@@ -131,7 +131,7 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
   const [showRight, setShowRight] = useState(false);
   const isTextOnly = theme.categoryNavBarStyle === 'text';
 
-  const allItems = useMemo(() => categories.flatMap((c) => c.items), [categories]);
+  const allItems = useMemo(() => categories.flatMap((c) => c.subCategories.flatMap((sc) => sc.items)), [categories]);
   const allImages = useMemo(() => {
     if (allItems.length === 0) return [];
     const shuffled = [...allItems].sort(() => 0.5 - Math.random());
@@ -166,7 +166,6 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
     }
   };
 
-  /* ---- Text-only pill mode ---- */
   if (isTextOnly) {
     return (
       <div className="relative mb-10">
@@ -184,16 +183,16 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
           </button>
           {categories.map((cat) => (
             <button
-              key={cat.categoryName}
-              onClick={() => onSelect(cat.categoryName)}
+              key={cat.parentCategoryName}
+              onClick={() => onSelect(cat.parentCategoryName)}
               className="flex-shrink-0 whitespace-nowrap font-medium transition-all duration-200 px-4 py-2 text-sm"
               style={{
-                backgroundColor: selected === cat.categoryName ? theme.primaryColor : `${theme.primaryColor}14`,
-                color: selected === cat.categoryName ? '#fff' : theme.primaryColor,
+                backgroundColor: selected === cat.parentCategoryName ? theme.primaryColor : `${theme.primaryColor}14`,
+                color: selected === cat.parentCategoryName ? '#fff' : theme.primaryColor,
                 borderRadius: `${theme.borderRadius}px`,
               }}
             >
-              {cat.categoryName}
+              {cat.parentCategoryName}
             </button>
           ))}
         </div>
@@ -201,7 +200,6 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
     );
   }
 
-  /* ---- Image thumbnail mode ---- */
   return (
     <div className="relative mb-10" ref={scrollRef}>
       {showLeft && (
@@ -239,12 +237,12 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
         </button>
 
         {categories.map((cat) => {
-          const img = cat.items[0]?.imageUrl;
-          const isSelected = selected === cat.categoryName;
+          const img = cat.subCategories[0]?.items[0]?.imageUrl;
+          const isSelected = selected === cat.parentCategoryName;
           return (
             <button
-              key={cat.categoryName}
-              onClick={() => onSelect(cat.categoryName)}
+              key={cat.parentCategoryName}
+              onClick={() => onSelect(cat.parentCategoryName)}
               className="relative flex-shrink-0 w-20 h-20 overflow-hidden transition-all duration-200 hover:scale-105"
               style={{
                 borderRadius: `${theme.borderRadius}px`,
@@ -256,14 +254,14 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
               }}
             >
               {img ? (
-                <img src={img} alt={cat.categoryName} className="absolute inset-0 w-full h-full object-cover" />
+                <img src={img} alt={cat.parentCategoryName} className="absolute inset-0 w-full h-full object-cover" />
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">{cat.categoryName.charAt(0)}</span>
+                  <span className="text-lg font-bold text-white">{cat.parentCategoryName.charAt(0)}</span>
                 </div>
               )}
               <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm py-1">
-                <span className="text-[10px] font-medium text-white text-center block truncate">{cat.categoryName}</span>
+                <span className="text-[10px] font-medium text-white text-center block truncate">{cat.parentCategoryName}</span>
               </div>
             </button>
           );
@@ -794,12 +792,11 @@ export default function PublicMenuPage() {
   const categories = useMemo(() => (Array.isArray(data?.menu) ? data.menu : []), [data]);
 
   const filteredCategories = useMemo(() => {
-    return selectedCategory === 'all'
-      ? categories
-      : categories.filter((c) => c.categoryName === selectedCategory);
+    if (selectedCategory === 'all') return categories;
+    return categories.filter((c) => c.parentCategoryName === selectedCategory);
   }, [categories, selectedCategory]);
 
-  const categoryNames = useMemo(() => categories.map((c) => c.categoryName).filter(Boolean), [categories]);
+  const categoryNames = useMemo(() => categories.map((c) => c.parentCategoryName).filter(Boolean), [categories]);
   const theme = data?.theme || {};
   const useTwoColumns = theme.cardWidth <= 200;
   const gridClass = useTwoColumns ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2';
@@ -808,12 +805,22 @@ export default function PublicMenuPage() {
 
   const specialItem = useMemo(() => {
     if (!showSpecial) return null;
-    for (const cat of categories) {
-      const found = cat.items.find((i) => i.id === theme.specialCardItemId && i.isAvailable);
-      if (found) return { ...found, categoryName: cat.categoryName };
+    for (const pc of categories) {
+      for (const sc of pc.subCategories) {
+        const found = sc.items.find((i) => i.id === theme.specialCardItemId && i.isAvailable);
+        if (found) return { ...found, categoryName: sc.categoryName };
+      }
     }
     return null;
   }, [categories, showSpecial, theme.specialCardItemId, theme.specialCardEnabled]);
+
+  const allSubCategories = useMemo(() => categories.flatMap((c) => c.subCategories), [categories]);
+  const allItems = useMemo(() => allSubCategories.flatMap((sc) => sc.items), [allSubCategories]);
+  const allImages = useMemo(() => {
+    if (allItems.length === 0) return [];
+    const shuffled = [...allItems].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4);
+  }, [allItems]);
 
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}>
@@ -829,67 +836,76 @@ export default function PublicMenuPage() {
           cafeName={data?.cafeName}
           workingHours={data?.workingHours}
           theme={theme}
-        />
-
-        {specialItem && (
-          <div className="mb-8 animate-fade-in-up">
-            <div className="flex items-center gap-2 mb-4">
-              <Award size={16} className="text-amber-500" />
-              <span className="text-sm font-semibold text-amber-600">آیتم ویژه</span>
-            </div>
-            <MenuItemCard
-              item={specialItem}
-              theme={theme}
-              isSpecial={true}
-              index={0}
-              onClick={(item) => openItem(item, specialItem.categoryName)}
-            />
-          </div>
-        )}
+         />
 
         {categoryNames.length > 0 && (
           <CategoryNavBar categories={categories} selected={selectedCategory} onSelect={setSelectedCategory} theme={theme} />
         )}
 
-        {filteredCategories.map((category, catIdx) => {
-          const allCatItems = [...category.items];
-
-          return (
-            <section key={category.categoryName} className="mb-12">
-              <CategoryHeading name={category.categoryName} items={category.items} theme={theme} />
-
-              {isListStyle ? (
-                <div className="space-y-2">
-                  {allCatItems.map((item, idx) => (
-                    <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 60}ms` }}>
-                      <MenuItemCard
-                        item={item}
-                        theme={theme}
-                        isSpecial={item.isSpecial}
-                        index={idx}
-                        onClick={(clickedItem) => openItem(clickedItem, category.categoryName)}
-                      />
+        {/* All items when "all" selected */}
+        {selectedCategory === 'all' && (
+          <>
+            {categories.map((pc, pcIdx) => (
+              <section key={pc.parentCategoryName} className="mb-12">
+                <CategoryHeading name={pc.parentCategoryName} items={allItems} theme={theme} />
+                {pc.subCategories.map((sc) => (
+                  <div key={sc.categoryId} className="mb-8">
+                    <h3 className="mb-4 text-lg font-semibold text-slate-700" style={{ fontSize: theme.bodyFontSize }}>
+                      {sc.categoryName}
+                    </h3>
+                    <div className={`grid ${gridClass} gap-4`}>
+                      {sc.items.map((item, idx) => (
+                        <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(pcIdx * 3 + idx) * 60}ms` }}>
+                          <MenuItemCard
+                            item={item}
+                            theme={theme}
+                            isSpecial={item.isSpecial}
+                            index={idx}
+                            onClick={(clickedItem) => openItem(clickedItem, sc.categoryName)}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
+                  </div>
+                ))}
+              </section>
+            ))}
+          </>
+        )}
+
+        {/* Filtered by parent category */}
+        {selectedCategory !== 'all' && filteredCategories.map((pc, pcIdx) => (
+          <section key={pc.parentCategoryName} className="mb-12">
+            <CategoryHeading name={pc.parentCategoryName} items={allItems} theme={theme} />
+            {pc.subCategories.map((sc, scIdx) => (
+              <div key={sc.categoryId} className="mb-8">
+                <h3 className="mb-4 text-lg font-semibold text-slate-700" style={{ fontSize: theme.bodyFontSize }}>
+                  {sc.categoryName}
+                </h3>
                 <div className={`grid ${gridClass} gap-4`}>
-                  {allCatItems.map((item, idx) => (
-                    <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(catIdx * 3 + idx) * 60}ms` }}>
+                  {sc.items.map((item, idx) => (
+                    <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(pcIdx * 3 + scIdx * 2 + idx) * 60}ms` }}>
                       <MenuItemCard
                         item={item}
                         theme={theme}
                         isSpecial={item.isSpecial}
                         index={idx}
-                        onClick={(clickedItem) => openItem(clickedItem, category.categoryName)}
+                        onClick={(clickedItem) => openItem(clickedItem, sc.categoryName)}
                       />
                     </div>
                   ))}
                 </div>
-              )}
-            </section>
-          );
-        })}
+              </div>
+            ))}
+          </section>
+        ))}
+
+        {categories.length === 0 && selectedCategory === 'all' && (
+          <div className="text-center py-16 text-slate-400">
+            <p className="text-lg font-medium">منویی موجود نیست</p>
+            <p className="text-sm mt-2">لطفاً از مدیریت منو آیتم‌های منو را اضافه کنید</p>
+          </div>
+        )}
 
         <CafeFooter
           address={data?.address}
