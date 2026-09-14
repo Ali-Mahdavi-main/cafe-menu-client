@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiFetch } from '../services/api';
-import { Phone, MapPin, ExternalLink, Clock, Star, Sparkles, ChevronUp, Award, X } from 'lucide-react';
+import { Phone, MapPin, ExternalLink, Clock, Star, Sparkles, ChevronUp, ChevronRight, X } from 'lucide-react';
 
 /* ---------- Helpers ---------- */
 const aspectToPadding = (ratio) => {
@@ -14,7 +14,6 @@ const aspectToPadding = (ratio) => {
 function BackgroundLights({ theme }) {
   if (!theme.backgroundLightEnabled) return null;
 
-  const intensity = theme.backgroundLightIntensity ?? 50;
   const leftColor = theme.backgroundLightLeftColor || '#a78bfa';
   const rightColor = theme.backgroundLightRightColor || '#60a5fa';
   const opacity = (theme.backgroundLightIntensity || 50) / 100;
@@ -124,19 +123,14 @@ function CafeHeader({ logoUrl, cafeName, workingHours, theme }) {
   return null;
 }
 
-/* ---------- Category Nav ---------- */
-function CategoryNavBar({ categories, selected, onSelect, theme }) {
+/* ---------- Generic image-based nav bar (used for parent-level & sub-level selection) ---------- */
+function ImageNavBar({ items, selected, onSelect, theme, allLabel = 'همه' }) {
   const scrollRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
   const isTextOnly = theme.categoryNavBarStyle === 'text';
 
-  const allItems = useMemo(() => categories.flatMap((c) => c.subCategories.flatMap((sc) => sc.items)), [categories]);
-  const allImages = useMemo(() => {
-    if (allItems.length === 0) return [];
-    const shuffled = [...allItems].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 4);
-  }, [allItems]);
+  const mosaicImages = useMemo(() => items.filter((it) => it.imageUrl).slice(0, 4), [items]);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -158,13 +152,15 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
         window.removeEventListener('resize', checkScroll);
       }
     };
-  }, [checkScroll]);
+  }, [checkScroll, items]);
 
   const scroll = (dir) => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: dir * 130, behavior: 'smooth' });
     }
   };
+
+  if (items.length === 0) return null;
 
   if (isTextOnly) {
     return (
@@ -179,20 +175,20 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
               borderRadius: `${theme.borderRadius}px`,
             }}
           >
-            همه
+            {allLabel}
           </button>
-          {categories.map((cat) => (
+          {items.map((it) => (
             <button
-              key={cat.parentCategoryName}
-              onClick={() => onSelect(cat.parentCategoryName)}
+              key={it.key}
+              onClick={() => onSelect(it.key)}
               className="flex-shrink-0 whitespace-nowrap font-medium transition-all duration-200 px-4 py-2 text-sm"
               style={{
-                backgroundColor: selected === cat.parentCategoryName ? theme.primaryColor : `${theme.primaryColor}14`,
-                color: selected === cat.parentCategoryName ? '#fff' : theme.primaryColor,
+                backgroundColor: selected === it.key ? theme.primaryColor : `${theme.primaryColor}14`,
+                color: selected === it.key ? '#fff' : theme.primaryColor,
                 borderRadius: `${theme.borderRadius}px`,
               }}
             >
-              {cat.parentCategoryName}
+              {it.label}
             </button>
           ))}
         </div>
@@ -221,10 +217,10 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
           }}
         >
           <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-px bg-white/20">
-            {allImages.slice(0, 4).map((item, idx) => (
+            {mosaicImages.map((it, idx) => (
               <div key={idx} className="relative overflow-hidden">
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                {it.imageUrl ? (
+                  <img src={it.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
                 ) : (
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-violet-500" />
                 )}
@@ -232,17 +228,16 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
             ))}
           </div>
           <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm py-1">
-            <span className="text-[10px] font-medium text-white text-center block">همه</span>
+            <span className="text-[10px] font-medium text-white text-center block">{allLabel}</span>
           </div>
         </button>
 
-        {categories.map((cat) => {
-          const img = cat.subCategories[0]?.items[0]?.imageUrl;
-          const isSelected = selected === cat.parentCategoryName;
+        {items.map((it) => {
+          const isSelected = selected === it.key;
           return (
             <button
-              key={cat.parentCategoryName}
-              onClick={() => onSelect(cat.parentCategoryName)}
+              key={it.key}
+              onClick={() => onSelect(it.key)}
               className="relative flex-shrink-0 w-20 h-20 overflow-hidden transition-all duration-200 hover:scale-105"
               style={{
                 borderRadius: `${theme.borderRadius}px`,
@@ -253,15 +248,15 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
                   : undefined,
               }}
             >
-              {img ? (
-                <img src={img} alt={cat.parentCategoryName} className="absolute inset-0 w-full h-full object-cover" />
+              {it.imageUrl ? (
+                <img src={it.imageUrl} alt={it.label} className="absolute inset-0 w-full h-full object-cover" />
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">{cat.parentCategoryName.charAt(0)}</span>
+                  <span className="text-lg font-bold text-white">{it.label.charAt(0)}</span>
                 </div>
               )}
               <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm py-1">
-                <span className="text-[10px] font-medium text-white text-center block truncate">{cat.parentCategoryName}</span>
+                <span className="text-[10px] font-medium text-white text-center block truncate">{it.label}</span>
               </div>
             </button>
           );
@@ -273,6 +268,112 @@ function CategoryNavBar({ categories, selected, onSelect, theme }) {
         </button>
       )}
     </div>
+  );
+}
+
+/* ---------- Parent Category Cards (first screen) ---------- */
+function ParentCategoryCard({ category, theme, index, onClick }) {
+  const firstImage = useMemo(() => {
+    for (const sc of category.subCategories) {
+      const found = sc.items.find((i) => i.imageUrl);
+      if (found) return found.imageUrl;
+    }
+    return null;
+  }, [category]);
+
+  const itemCount = useMemo(
+    () => category.subCategories.reduce((sum, sc) => sum + sc.items.length, 0),
+    [category]
+  );
+
+  return (
+    <button
+      onClick={onClick}
+      className="group relative overflow-hidden text-right transition-all duration-300 hover:-translate-y-1 hover:shadow-xl animate-fade-in-up"
+      style={{
+        animationDelay: `${index * 70}ms`,
+        backgroundColor: theme.cardBackground || '#ffffff',
+        borderRadius: `${theme.borderRadius}px`,
+        boxShadow: theme.shadow !== 'none' ? theme.shadow : undefined,
+        border: `1px solid ${theme.borderColor || '#e2e8f0'}`,
+      }}
+    >
+      <div className="relative w-full" style={{ paddingBottom: '75%' }}>
+        {firstImage ? (
+          <img
+            src={firstImage}
+            alt={category.parentCategoryName}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ background: `linear-gradient(135deg, ${theme.primaryColor}30, ${theme.primaryColor}10)` }}
+          >
+            <span className="text-3xl font-bold" style={{ color: theme.primaryColor }}>
+              {category.parentCategoryName?.charAt(0)}
+            </span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
+        <div className="absolute bottom-0 right-0 left-0 p-3">
+          <h3 className="font-bold text-white drop-shadow-md" style={{ fontSize: theme.bodyFontSize * 1.05 }}>
+            {category.parentCategoryName}
+          </h3>
+          <p className="text-white/80 text-xs mt-0.5">{itemCount} آیتم</p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function ParentCategoryGrid({ categories, theme, onSelect }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+      {categories.map((cat, idx) => (
+        <ParentCategoryCard
+          key={cat.parentCategoryId ?? cat.parentCategoryName}
+          category={cat}
+          theme={theme}
+          index={idx}
+          onClick={() => onSelect(cat.parentCategoryName)}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ---------- Loading Skeleton ---------- */
+function MenuSkeleton({ theme }) {
+  const radius = theme?.borderRadius ?? 16;
+  return (
+    <>
+      <div className="mb-6 flex justify-center">
+        <div className="h-4 w-40 rounded-full bg-slate-200/70 animate-pulse" />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="overflow-hidden animate-pulse" style={{ borderRadius: `${radius}px` }}>
+            <div className="w-full bg-slate-200/70" style={{ paddingBottom: '75%' }} />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* ---------- Back Button ---------- */
+function BackButton({ onClick, theme }) {
+  return (
+    <button
+      onClick={onClick}
+      className="mb-6 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:opacity-80"
+      style={{ backgroundColor: `${theme.primaryColor}12`, color: theme.primaryColor }}
+    >
+      <ChevronRight size={16} />
+      بازگشت به دسته‌بندی‌ها
+    </button>
   );
 }
 
@@ -472,7 +573,6 @@ function MenuItemModal({ item, categoryName, theme, onClose }) {
   const isGlass = style === 5;
   const isOverlay = style === 4;
   const primary = theme.primaryColor;
-  const lightSurface = !isGlass && !isOverlay;
 
   const cardStyle = {
     backgroundColor: isOverlay ? '#111' : (theme.cardBackground || '#ffffff'),
@@ -739,13 +839,22 @@ export default function PublicMenuPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Navigation: 'categories' shows the parent-category cards, 'detail' shows one category's full menu
+  const [view, setView] = useState('categories');
+  const [activeParent, setActiveParent] = useState(null);
+  const [activeSubCategory, setActiveSubCategory] = useState('all');
+
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
   const [activeItemCategory, setActiveItemCategory] = useState(null);
 
   useEffect(() => {
-    setSelectedCategory('all');
+    setLoading(true);
+    setError(null);
+    setView('categories');
+    setActiveParent(null);
+    setActiveSubCategory('all');
     apiFetch(`/public/${cafeId}/${accessKey}`)
       .then((d) => {
         setData(d);
@@ -790,37 +899,50 @@ export default function PublicMenuPage() {
   }, []);
 
   const categories = useMemo(() => (Array.isArray(data?.menu) ? data.menu : []), [data]);
-
-  const filteredCategories = useMemo(() => {
-    if (selectedCategory === 'all') return categories;
-    return categories.filter((c) => c.parentCategoryName === selectedCategory);
-  }, [categories, selectedCategory]);
-
-  const categoryNames = useMemo(() => categories.map((c) => c.parentCategoryName).filter(Boolean), [categories]);
   const theme = data?.theme || {};
   const useTwoColumns = theme.cardWidth <= 200;
   const gridClass = useTwoColumns ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2';
-  const isListStyle = theme.cardStyle === 3;
-  const showSpecial = theme.specialCardEnabled && theme.specialCardItemId;
 
-  const specialItem = useMemo(() => {
-    if (!showSpecial) return null;
-    for (const pc of categories) {
-      for (const sc of pc.subCategories) {
-        const found = sc.items.find((i) => i.id === theme.specialCardItemId && i.isAvailable);
-        if (found) return { ...found, categoryName: sc.categoryName };
-      }
-    }
-    return null;
-  }, [categories, showSpecial, theme.specialCardItemId, theme.specialCardEnabled]);
+  const activeParentCategory = useMemo(
+    () => categories.find((c) => c.parentCategoryName === activeParent) || null,
+    [categories, activeParent]
+  );
 
-  const allSubCategories = useMemo(() => categories.flatMap((c) => c.subCategories), [categories]);
-  const allItems = useMemo(() => allSubCategories.flatMap((sc) => sc.items), [allSubCategories]);
-  const allImages = useMemo(() => {
-    if (allItems.length === 0) return [];
-    const shuffled = [...allItems].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 4);
-  }, [allItems]);
+  const activeParentItems = useMemo(
+    () => (activeParentCategory ? activeParentCategory.subCategories.flatMap((sc) => sc.items) : []),
+    [activeParentCategory]
+  );
+
+  const subNavItems = useMemo(() => {
+    if (!activeParentCategory) return [];
+    return activeParentCategory.subCategories.map((sc) => ({
+      key: sc.categoryId,
+      label: sc.categoryName,
+      imageUrl: sc.items.find((i) => i.imageUrl)?.imageUrl || null,
+    }));
+  }, [activeParentCategory]);
+
+  const visibleSubCategories = useMemo(() => {
+    if (!activeParentCategory) return [];
+    if (activeSubCategory === 'all') return activeParentCategory.subCategories;
+    return activeParentCategory.subCategories.filter((sc) => sc.categoryId === activeSubCategory);
+  }, [activeParentCategory, activeSubCategory]);
+
+  const handleSelectParent = useCallback((name) => {
+    setActiveParent(name);
+    setActiveSubCategory('all');
+    setView('detail');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setView('categories');
+    setActiveParent(null);
+    setActiveSubCategory('all');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+
+  const showEmptyState = !loading && !error && categories.length === 0;
 
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}>
@@ -836,55 +958,48 @@ export default function PublicMenuPage() {
           cafeName={data?.cafeName}
           workingHours={data?.workingHours}
           theme={theme}
-         />
+        />
 
-        {categoryNames.length > 0 && (
-          <CategoryNavBar categories={categories} selected={selectedCategory} onSelect={setSelectedCategory} theme={theme} />
+        {error && (
+          <div className="text-center py-16 text-red-400">
+            <p className="text-lg font-medium">{error}</p>
+          </div>
         )}
 
-        {/* All items when "all" selected */}
-        {selectedCategory === 'all' && (
+        {!error && loading && <MenuSkeleton theme={theme} />}
+
+        {!error && !loading && view === 'categories' && (
           <>
-            {categories.map((pc, pcIdx) => (
-              <section key={pc.parentCategoryName} className="mb-12">
-                <CategoryHeading name={pc.parentCategoryName} items={allItems} theme={theme} />
-                {pc.subCategories.map((sc) => (
-                  <div key={sc.categoryId} className="mb-8">
-                    <h3 className="mb-4 text-lg font-semibold text-slate-700" style={{ fontSize: theme.bodyFontSize }}>
-                      {sc.categoryName}
-                    </h3>
-                    <div className={`grid ${gridClass} gap-4`}>
-                      {sc.items.map((item, idx) => (
-                        <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(pcIdx * 3 + idx) * 60}ms` }}>
-                          <MenuItemCard
-                            item={item}
-                            theme={theme}
-                            isSpecial={item.isSpecial}
-                            index={idx}
-                            onClick={(clickedItem) => openItem(clickedItem, sc.categoryName)}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </section>
-            ))}
+            {categories.length > 0 && (
+              <ParentCategoryGrid categories={categories} theme={theme} onSelect={handleSelectParent} />
+            )}
+            {showEmptyState && (
+              <div className="text-center py-16 text-slate-400">
+                <p className="text-lg font-medium">منویی موجود نیست</p>
+                <p className="text-sm mt-2">لطفاً از مدیریت منو آیتم‌های منو را اضافه کنید</p>
+              </div>
+            )}
           </>
         )}
 
-        {/* Filtered by parent category */}
-        {selectedCategory !== 'all' && filteredCategories.map((pc, pcIdx) => (
-          <section key={pc.parentCategoryName} className="mb-12">
-            <CategoryHeading name={pc.parentCategoryName} items={allItems} theme={theme} />
-            {pc.subCategories.map((sc, scIdx) => (
+        {!error && !loading && view === 'detail' && activeParentCategory && (
+          <>
+            <BackButton onClick={handleBack} theme={theme} />
+
+            <CategoryHeading name={activeParentCategory.parentCategoryName} items={activeParentItems} theme={theme} />
+
+            {subNavItems.length > 1 && (
+              <ImageNavBar items={subNavItems} selected={activeSubCategory} onSelect={setActiveSubCategory} theme={theme} />
+            )}
+
+            {visibleSubCategories.map((sc, scIdx) => (
               <div key={sc.categoryId} className="mb-8">
                 <h3 className="mb-4 text-lg font-semibold text-slate-700" style={{ fontSize: theme.bodyFontSize }}>
                   {sc.categoryName}
                 </h3>
                 <div className={`grid ${gridClass} gap-4`}>
                   {sc.items.map((item, idx) => (
-                    <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(pcIdx * 3 + scIdx * 2 + idx) * 60}ms` }}>
+                    <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(scIdx * 3 + idx) * 60}ms` }}>
                       <MenuItemCard
                         item={item}
                         theme={theme}
@@ -897,14 +1012,7 @@ export default function PublicMenuPage() {
                 </div>
               </div>
             ))}
-          </section>
-        ))}
-
-        {categories.length === 0 && selectedCategory === 'all' && (
-          <div className="text-center py-16 text-slate-400">
-            <p className="text-lg font-medium">منویی موجود نیست</p>
-            <p className="text-sm mt-2">لطفاً از مدیریت منو آیتم‌های منو را اضافه کنید</p>
-          </div>
+          </>
         )}
 
         <CafeFooter
@@ -916,11 +1024,11 @@ export default function PublicMenuPage() {
           theme={theme}
         />
         <div className="mt-6 flex justify-center">
-          <a
+          
             referrerPolicy="origin"
             target="_blank"
             href="https://trustseal.enamad.ir/?id=7409176&Code=IzQz3pFc84IStgN0GEPkppcNx8RhZYEb"
-          >
+          <a>
             <img
               referrerPolicy="origin"
               src="https://trustseal.enamad.ir/logo.aspx?id=7409176&Code=IzQz3pFc84IStgN0GEPkppcNx8RhZYEb"
