@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiFetch } from '../services/api';
-import { Phone, MapPin, ExternalLink, Clock, Star, Sparkles, ChevronUp, ChevronRight, X } from 'lucide-react';
+import { Phone, MapPin, ExternalLink, Clock, Star, Sparkles, ChevronUp, ChevronRight, ChevronLeft, X } from 'lucide-react';
 
 /* ---------- Helpers ---------- */
 const aspectToPadding = (ratio) => {
@@ -123,7 +123,7 @@ function CafeHeader({ logoUrl, cafeName, workingHours, theme }) {
   return null;
 }
 
-/* ---------- Generic image-based nav bar (used for parent-level & sub-level selection) ---------- */
+/* ---------- Generic image-based nav bar (used for sub-category selection inside a category) ---------- */
 function ImageNavBar({ items, selected, onSelect, theme, allLabel = 'همه' }) {
   const scrollRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
@@ -168,7 +168,7 @@ function ImageNavBar({ items, selected, onSelect, theme, allLabel = 'همه' }) 
         <div className="flex gap-2 overflow-x-auto py-2 px-2 scrollbar-hide">
           <button
             onClick={() => onSelect('all')}
-            className="flex-shrink-0 whitespace-nowrap font-medium transition-all duration-200 px-4 py-2 text-sm"
+            className="flex-shrink-0 whitespace-nowrap font-medium transition-colors duration-200 px-4 py-2 text-sm"
             style={{
               backgroundColor: selected === 'all' ? theme.primaryColor : `${theme.primaryColor}14`,
               color: selected === 'all' ? '#fff' : theme.primaryColor,
@@ -181,7 +181,7 @@ function ImageNavBar({ items, selected, onSelect, theme, allLabel = 'همه' }) 
             <button
               key={it.key}
               onClick={() => onSelect(it.key)}
-              className="flex-shrink-0 whitespace-nowrap font-medium transition-all duration-200 px-4 py-2 text-sm"
+              className="flex-shrink-0 whitespace-nowrap font-medium transition-colors duration-200 px-4 py-2 text-sm"
               style={{
                 backgroundColor: selected === it.key ? theme.primaryColor : `${theme.primaryColor}14`,
                 color: selected === it.key ? '#fff' : theme.primaryColor,
@@ -199,14 +199,14 @@ function ImageNavBar({ items, selected, onSelect, theme, allLabel = 'همه' }) 
   return (
     <div className="relative mb-10" ref={scrollRef}>
       {showLeft && (
-        <button onClick={() => scroll(-1)} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-white transition">
+        <button onClick={() => scroll(-1)} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-white transition-colors">
           <ChevronUp size={18} className="-rotate-90 text-gray-600" />
         </button>
       )}
       <div className="flex gap-3 overflow-x-auto py-2 px-2 scrollbar-hide scroll-sm-auto">
         <button
           onClick={() => onSelect('all')}
-          className="relative flex-shrink-0 w-20 h-20 overflow-hidden transition-all duration-200 hover:scale-105"
+          className="relative flex-shrink-0 w-20 h-20 overflow-hidden transition-transform duration-200 hover:scale-105"
           style={{
             borderRadius: `${theme.borderRadius}px`,
             opacity: selected === 'all' ? 1 : 0.8,
@@ -238,7 +238,7 @@ function ImageNavBar({ items, selected, onSelect, theme, allLabel = 'همه' }) 
             <button
               key={it.key}
               onClick={() => onSelect(it.key)}
-              className="relative flex-shrink-0 w-20 h-20 overflow-hidden transition-all duration-200 hover:scale-105"
+              className="relative flex-shrink-0 w-20 h-20 overflow-hidden transition-transform duration-200 hover:scale-105"
               style={{
                 borderRadius: `${theme.borderRadius}px`,
                 opacity: isSelected ? 1 : 0.8,
@@ -263,7 +263,7 @@ function ImageNavBar({ items, selected, onSelect, theme, allLabel = 'همه' }) 
         })}
       </div>
       {showRight && (
-        <button onClick={() => scroll(1)} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-white transition">
+        <button onClick={() => scroll(1)} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-white transition-colors">
           <ChevronUp size={18} className="rotate-90 text-gray-600" />
         </button>
       )}
@@ -271,8 +271,8 @@ function ImageNavBar({ items, selected, onSelect, theme, allLabel = 'همه' }) 
   );
 }
 
-/* ---------- Parent Category Cards (first screen) ---------- */
-function ParentCategoryCard({ category, theme, index, onClick }) {
+/* ---------- Parent Category Row Card (first screen) ---------- */
+function ParentCategoryCard({ category, theme, onClick }) {
   const firstImage = useMemo(() => {
     for (const sc of category.subCategories) {
       const found = sc.items.find((i) => i.imageUrl);
@@ -289,21 +289,20 @@ function ParentCategoryCard({ category, theme, index, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="group relative overflow-hidden text-right transition-all duration-300 hover:-translate-y-1 hover:shadow-xl animate-fade-in-up"
+      className="group relative flex w-full items-stretch overflow-hidden text-right transition-transform duration-300 hover:-translate-y-0.5 active:scale-[0.99]"
       style={{
-        animationDelay: `${index * 70}ms`,
         backgroundColor: theme.cardBackground || '#ffffff',
         borderRadius: `${theme.borderRadius}px`,
         boxShadow: theme.shadow !== 'none' ? theme.shadow : undefined,
         border: `1px solid ${theme.borderColor || '#e2e8f0'}`,
       }}
     >
-      <div className="relative w-full" style={{ paddingBottom: '75%' }}>
+      <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden">
         {firstImage ? (
           <img
             src={firstImage}
             alt={category.parentCategoryName}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"
           />
         ) : (
@@ -311,18 +310,22 @@ function ParentCategoryCard({ category, theme, index, onClick }) {
             className="absolute inset-0 flex items-center justify-center"
             style={{ background: `linear-gradient(135deg, ${theme.primaryColor}30, ${theme.primaryColor}10)` }}
           >
-            <span className="text-3xl font-bold" style={{ color: theme.primaryColor }}>
+            <span className="text-2xl font-bold" style={{ color: theme.primaryColor }}>
               {category.parentCategoryName?.charAt(0)}
             </span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
-        <div className="absolute bottom-0 right-0 left-0 p-3">
-          <h3 className="font-bold text-white drop-shadow-md" style={{ fontSize: theme.bodyFontSize * 1.05 }}>
-            {category.parentCategoryName}
-          </h3>
-          <p className="text-white/80 text-xs mt-0.5">{itemCount} آیتم</p>
-        </div>
+      </div>
+      <div className="flex flex-1 flex-col justify-center px-4 py-3 min-w-0">
+        <h3 className="font-bold truncate" style={{ color: theme.textColor, fontSize: theme.bodyFontSize * 1.1 }}>
+          {category.parentCategoryName}
+        </h3>
+        <p className="text-xs mt-1 opacity-60" style={{ color: theme.textColor }}>
+          {itemCount} آیتم
+        </p>
+      </div>
+      <div className="flex items-center px-3 opacity-40 flex-shrink-0" style={{ color: theme.textColor }}>
+        <ChevronLeft size={20} />
       </div>
     </button>
   );
@@ -330,15 +333,19 @@ function ParentCategoryCard({ category, theme, index, onClick }) {
 
 function ParentCategoryGrid({ categories, theme, onSelect }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+    <div className="flex flex-col gap-3 mb-8">
       {categories.map((cat, idx) => (
-        <ParentCategoryCard
+        <div
           key={cat.parentCategoryId ?? cat.parentCategoryName}
-          category={cat}
-          theme={theme}
-          index={idx}
-          onClick={() => onSelect(cat.parentCategoryName)}
-        />
+          className="animate-fade-in-up"
+          style={{ animationDelay: `${Math.min(idx, 10) * 60}ms` }}
+        >
+          <ParentCategoryCard
+            category={cat}
+            theme={theme}
+            onClick={() => onSelect(cat.parentCategoryName)}
+          />
+        </div>
       ))}
     </div>
   );
@@ -352,10 +359,18 @@ function MenuSkeleton({ theme }) {
       <div className="mb-6 flex justify-center">
         <div className="h-4 w-40 rounded-full bg-slate-200/70 animate-pulse" />
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="overflow-hidden animate-pulse" style={{ borderRadius: `${radius}px` }}>
-            <div className="w-full bg-slate-200/70" style={{ paddingBottom: '75%' }} />
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-stretch overflow-hidden animate-pulse"
+            style={{ borderRadius: `${radius}px`, border: '1px solid rgba(148,163,184,0.2)' }}
+          >
+            <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 bg-slate-200/70" />
+            <div className="flex flex-1 flex-col justify-center gap-2 px-4">
+              <div className="h-3.5 w-1/2 rounded bg-slate-200/70" />
+              <div className="h-2.5 w-1/4 rounded bg-slate-200/60" />
+            </div>
           </div>
         ))}
       </div>
@@ -368,7 +383,7 @@ function BackButton({ onClick, theme }) {
   return (
     <button
       onClick={onClick}
-      className="mb-6 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:opacity-80"
+      className="mb-6 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors hover:opacity-80"
       style={{ backgroundColor: `${theme.primaryColor}12`, color: theme.primaryColor }}
     >
       <ChevronRight size={16} />
@@ -378,7 +393,7 @@ function BackButton({ onClick, theme }) {
 }
 
 /* ---------- Menu Item Card ---------- */
-function MenuItemCard({ item, theme, isSpecial, index, onClick }) {
+function MenuItemCard({ item, theme, isSpecial, onClick }) {
   const style = theme.cardStyle || 1;
   const imagePad = aspectToPadding(theme.imageAspectRatio);
   const isGlass = style === 5;
@@ -388,7 +403,7 @@ function MenuItemCard({ item, theme, isSpecial, index, onClick }) {
     if (onClick) onClick(item);
   };
 
-  const baseClass = `relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer active:scale-[0.98] ${
+  const baseClass = `relative overflow-hidden rounded-2xl border transition-transform duration-300 hover:-translate-y-1 cursor-pointer active:scale-[0.98] ${
     isSpecial ? 'ring-2 ring-amber-400/60 animate-pulse-glow' : ''
   }`;
 
@@ -840,7 +855,7 @@ export default function PublicMenuPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Navigation: 'categories' shows the parent-category cards, 'detail' shows one category's full menu
+  // Navigation: 'categories' shows the parent-category rows, 'detail' shows one category's full menu
   const [view, setView] = useState('categories');
   const [activeParent, setActiveParent] = useState(null);
   const [activeSubCategory, setActiveSubCategory] = useState('all');
@@ -873,8 +888,14 @@ export default function PublicMenuPage() {
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
-      @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-      .animate-fade-in-up { animation: fadeInUp 0.5s ease-out both; }
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translate3d(0, 16px, 0); }
+        to { opacity: 1; transform: translate3d(0, 0, 0); }
+      }
+      .animate-fade-in-up {
+        animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+        will-change: transform, opacity;
+      }
       @keyframes glowPulse {
         0% { box-shadow: 0 0 8px rgba(250,204,21,0.4); }
         50% { box-shadow: 0 0 28px rgba(250,204,21,0.8); }
@@ -992,22 +1013,20 @@ export default function PublicMenuPage() {
               <ImageNavBar items={subNavItems} selected={activeSubCategory} onSelect={setActiveSubCategory} theme={theme} />
             )}
 
-            {visibleSubCategories.map((sc, scIdx) => (
+            {visibleSubCategories.map((sc) => (
               <div key={sc.categoryId} className="mb-8">
                 <h3 className="mb-4 text-lg font-semibold text-slate-700" style={{ fontSize: theme.bodyFontSize }}>
                   {sc.categoryName}
                 </h3>
                 <div className={`grid ${gridClass} gap-4`}>
-                  {sc.items.map((item, idx) => (
-                    <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(scIdx * 3 + idx) * 60}ms` }}>
-                      <MenuItemCard
-                        item={item}
-                        theme={theme}
-                        isSpecial={item.isSpecial}
-                        index={idx}
-                        onClick={(clickedItem) => openItem(clickedItem, sc.categoryName)}
-                      />
-                    </div>
+                  {sc.items.map((item) => (
+                    <MenuItemCard
+                      key={item.id}
+                      item={item}
+                      theme={theme}
+                      isSpecial={item.isSpecial}
+                      onClick={(clickedItem) => openItem(clickedItem, sc.categoryName)}
+                    />
                   ))}
                 </div>
               </div>
