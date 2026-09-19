@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiFetch } from '../services/api';
-import { Phone, MapPin, ExternalLink, Clock, Star, Sparkles, ChevronUp, ChevronRight, ChevronLeft, X } from 'lucide-react';
+import { Phone, MapPin, ExternalLink, Clock, Star, Sparkles, ChevronUp, ChevronRight, X } from 'lucide-react';
 
 /* ---------- Helpers ---------- */
 const aspectToPadding = (ratio) => {
@@ -271,7 +271,7 @@ function ImageNavBar({ items, selected, onSelect, theme, allLabel = 'همه' }) 
   );
 }
 
-/* ---------- Parent Category Row Card (first screen) ---------- */
+/* ---------- Parent Category Card (first screen, 16:9, blurred image background) ---------- */
 function ParentCategoryCard({ category, theme, onClick }) {
   const firstImage = useMemo(() => {
     for (const sc of category.subCategories) {
@@ -289,43 +289,35 @@ function ParentCategoryCard({ category, theme, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="group relative flex w-full items-stretch overflow-hidden text-right transition-transform duration-300 hover:-translate-y-0.5 active:scale-[0.99]"
+      className="group relative w-full overflow-hidden text-right transition-transform duration-300 hover:-translate-y-0.5 active:scale-[0.99]"
       style={{
-        backgroundColor: theme.cardBackground || '#ffffff',
         borderRadius: `${theme.borderRadius}px`,
         boxShadow: theme.shadow !== 'none' ? theme.shadow : undefined,
         border: `1px solid ${theme.borderColor || '#e2e8f0'}`,
       }}
     >
-      <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden">
+      <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
         {firstImage ? (
-          <img
-            src={firstImage}
-            alt={category.parentCategoryName}
-            className="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-          />
+          <>
+            <div
+              className="absolute inset-0 bg-cover bg-center scale-110 transition-transform duration-500 group-hover:scale-125"
+              style={{ backgroundImage: `url(${firstImage})`, filter: 'blur(6px)' }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/10" />
+          </>
         ) : (
           <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${theme.primaryColor}30, ${theme.primaryColor}10)` }}
-          >
-            <span className="text-2xl font-bold" style={{ color: theme.primaryColor }}>
-              {category.parentCategoryName?.charAt(0)}
-            </span>
-          </div>
+            className="absolute inset-0"
+            style={{ background: `linear-gradient(135deg, ${theme.primaryColor}55, ${theme.primaryColor}20)` }}
+          />
         )}
-      </div>
-      <div className="flex flex-1 flex-col justify-center px-4 py-3 min-w-0">
-        <h3 className="font-bold truncate" style={{ color: theme.textColor, fontSize: theme.bodyFontSize * 1.1 }}>
-          {category.parentCategoryName}
-        </h3>
-        <p className="text-xs mt-1 opacity-60" style={{ color: theme.textColor }}>
-          {itemCount} آیتم
-        </p>
-      </div>
-      <div className="flex items-center px-3 opacity-40 flex-shrink-0" style={{ color: theme.textColor }}>
-        <ChevronLeft size={20} />
+
+        <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5">
+          <h3 className="font-bold text-white drop-shadow-md" style={{ fontSize: theme.bodyFontSize * 1.2 }}>
+            {category.parentCategoryName}
+          </h3>
+          <p className="text-xs sm:text-sm mt-1 text-white/85 drop-shadow-sm">{itemCount} آیتم</p>
+        </div>
       </div>
     </button>
   );
@@ -333,7 +325,7 @@ function ParentCategoryCard({ category, theme, onClick }) {
 
 function ParentCategoryGrid({ categories, theme, onSelect }) {
   return (
-    <div className="flex flex-col gap-3 mb-8">
+    <div className="flex flex-col gap-4 mb-8">
       {categories.map((cat, idx) => (
         <div
           key={cat.parentCategoryId ?? cat.parentCategoryName}
@@ -359,19 +351,13 @@ function MenuSkeleton({ theme }) {
       <div className="mb-6 flex justify-center">
         <div className="h-4 w-40 rounded-full bg-slate-200/70 animate-pulse" />
       </div>
-      <div className="flex flex-col gap-3">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="flex flex-col gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="flex items-stretch overflow-hidden animate-pulse"
-            style={{ borderRadius: `${radius}px`, border: '1px solid rgba(148,163,184,0.2)' }}
-          >
-            <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 bg-slate-200/70" />
-            <div className="flex flex-1 flex-col justify-center gap-2 px-4">
-              <div className="h-3.5 w-1/2 rounded bg-slate-200/70" />
-              <div className="h-2.5 w-1/4 rounded bg-slate-200/60" />
-            </div>
-          </div>
+            className="relative w-full overflow-hidden animate-pulse bg-slate-200/70"
+            style={{ paddingBottom: '56.25%', borderRadius: `${radius}px`, border: '1px solid rgba(148,163,184,0.2)' }}
+          />
         ))}
       </div>
     </>
@@ -855,7 +841,7 @@ export default function PublicMenuPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Navigation: 'categories' shows the parent-category rows, 'detail' shows one category's full menu
+  // Navigation: 'categories' shows the parent-category cards, 'detail' shows one category's full menu
   const [view, setView] = useState('categories');
   const [activeParent, setActiveParent] = useState(null);
   const [activeSubCategory, setActiveSubCategory] = useState('all');
