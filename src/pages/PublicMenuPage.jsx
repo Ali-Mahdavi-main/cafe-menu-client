@@ -315,7 +315,7 @@ function ParentCategoryCard({ category, theme, onClick }) {
         )}
 
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4 text-white">
-          <h1 className="font-bold drop-shadow-md" style={{ fontSize: theme.headingFontSize * 0.6 }}>
+          <h1 className="font-bold drop-shadow-md" style={{ fontSize: theme.headingFontSize }}>
             {category.parentCategoryName}
           </h1>
         </div>
