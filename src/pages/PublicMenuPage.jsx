@@ -315,12 +315,9 @@ function ParentCategoryCard({ category, theme, onClick }) {
         )}
 
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4 text-white">
-          <h3 className="font-bold drop-shadow-md" style={{ fontSize: theme.headingFontSize * 0.6 }}>
+          <h1 className="font-bold drop-shadow-md" style={{ fontSize: theme.headingFontSize * 0.6 }}>
             {category.parentCategoryName}
-          </h3>
-          <p className="mt-2 opacity-90 drop-shadow-sm" style={{ fontSize: theme.bodyFontSize }}>
-            {itemCount} آیتم
-          </p>
+          </h1>
         </div>
       </div>
     </button>
