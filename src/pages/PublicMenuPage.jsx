@@ -289,7 +289,7 @@ function ParentCategoryCard({ category, theme, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="group relative w-full overflow-hidden text-right transition-transform duration-300 hover:-translate-y-0.5 active:scale-[0.99]"
+      className="group relative w-full overflow-hidden text-center transition-transform duration-300 hover:-translate-y-0.5 active:scale-[0.99]"
       style={{
         borderRadius: `${theme.borderRadius}px`,
         boxShadow: theme.shadow !== 'none' ? theme.shadow : undefined,
@@ -299,11 +299,13 @@ function ParentCategoryCard({ category, theme, onClick }) {
       <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
         {firstImage ? (
           <>
-            <div
-              className="absolute inset-0 bg-cover bg-center scale-110 transition-transform duration-500 group-hover:scale-125"
-              style={{ backgroundImage: `url(${firstImage})`, filter: 'blur(6px)' }}
+            <img
+              src={firstImage}
+              alt={category.parentCategoryName}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/10" />
+            <div className="absolute inset-0 bg-black/50" />
           </>
         ) : (
           <div
@@ -312,11 +314,13 @@ function ParentCategoryCard({ category, theme, onClick }) {
           />
         )}
 
-        <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5">
-          <h3 className="font-bold text-white drop-shadow-md" style={{ fontSize: theme.bodyFontSize * 1.2 }}>
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4 text-white">
+          <h3 className="font-bold drop-shadow-md" style={{ fontSize: theme.headingFontSize * 0.6 }}>
             {category.parentCategoryName}
           </h3>
-          <p className="text-xs sm:text-sm mt-1 text-white/85 drop-shadow-sm">{itemCount} آیتم</p>
+          <p className="mt-2 opacity-90 drop-shadow-sm" style={{ fontSize: theme.bodyFontSize }}>
+            {itemCount} آیتم
+          </p>
         </div>
       </div>
     </button>
